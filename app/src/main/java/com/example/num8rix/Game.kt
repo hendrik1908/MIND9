@@ -3,13 +3,20 @@ package com.example.num8rix
 class Game(val difficulty: DifficultyLevel) {
     val grid = Grid()
 
-    fun startGame() {
-        generateGame()
+    private fun loadVisualGridFromDatabase(difficulty: DifficultyLevel): String {
+        // Platzhalter – hier später Datenbankzugriff
+        return "1········;·5·······;···███···;·········;·········;·········;·███·····;·········;·········"
     }
-
 
     fun generateGame() {
-        val generator = Grid()
-        generator.generateGrid()
+        val visualString = loadVisualGridFromDatabase(difficulty)
+        grid.generateGridFromVisualString(visualString)
+        grid.printGrid()
     }
+
+    fun startGame() {
+        grid.printGrid()
+    }
+
+
 }

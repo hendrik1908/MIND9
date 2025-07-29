@@ -17,12 +17,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.num8rix.DifficultyLevel
 
 @Composable
 fun StartScreen(
     onInfoClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
-    onGameStart: (Difficulty) -> Unit = {}
+    onGameStart: (DifficultyLevel) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -84,7 +85,7 @@ fun StartScreen(
             DifficultyButton(
                 text = "Einfach",
                 isPrimary = true,
-                onClick = { onGameStart(Difficulty.EASY) }
+                onClick = { onGameStart(DifficultyLevel.EASY) }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -92,7 +93,7 @@ fun StartScreen(
             DifficultyButton(
                 text = "Mittel",
                 isPrimary = false,
-                onClick = { onGameStart(Difficulty.MEDIUM) }
+                onClick = { onGameStart(DifficultyLevel.MEDIUM) }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -100,7 +101,7 @@ fun StartScreen(
             DifficultyButton(
                 text = "Schwer",
                 isPrimary = false,
-                onClick = { onGameStart(Difficulty.HARD) }
+                onClick = { onGameStart(DifficultyLevel.HARD) }
             )
         }
 
@@ -156,11 +157,6 @@ fun DifficultyButton(
     }
 }
 
-enum class Difficulty {
-    EASY,
-    MEDIUM,
-    HARD
-}
 
 @Preview(showBackground = true)
 @Composable

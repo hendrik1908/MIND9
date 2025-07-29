@@ -16,9 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.num8rix.DifficultyLevel
+import com.example.num8rix.Game
+import com.example.num8rix.Grid
 
 @Composable
 fun GameScreen(
+    grid: Grid,
     onBackClick: () -> Unit = {}
 ) {
     var selectedCell by remember { mutableStateOf<Pair<Int, Int>?>(null) }
@@ -63,7 +67,7 @@ fun GameScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 9x9 Gitter
+        // 9x9 Gitter – jetzt mit echtem Grid!
         Box(
             modifier = Modifier
                 .aspectRatio(1f)
@@ -71,14 +75,16 @@ fun GameScreen(
                 .border(2.dp, Color.Black)
                 .padding(2.dp)
         ) {
-            Column {
+            Column(modifier = Modifier.fillMaxSize()) {
                 for (row in 0 until 9) {
                     Row(modifier = Modifier.weight(1f)) {
                         for (col in 0 until 9) {
+                            val field = grid.getField(row, col)
                             val isSelected = selectedCell == row to col
+
                             SudokuCell(
-                                value = "",
-                                isBlack = false, // später durch Daten setzen
+                                value = if (field.value == 0) "" else field.value.toString(),
+                                isBlack = field.isBlack(),
                                 isSelected = isSelected,
                                 onClick = { selectedCell = row to col },
                                 modifier = Modifier.weight(1f)
@@ -101,8 +107,7 @@ fun GameScreen(
             for (i in 1..9) {
                 Button(
                     onClick = { /* Wert setzen */ },
-                    modifier = Modifier
-                        .size(36.dp),
+                    modifier = Modifier.size(36.dp),
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(i.toString())
@@ -111,6 +116,7 @@ fun GameScreen(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
+
 
         // Buttons unten
         Row(
@@ -186,5 +192,14 @@ fun ActionButton(label: String, onClick: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun GameScreenPreview() {
-    GameScreen()
+    // Erstelle eine Instanz von Game mit dem Schwierigkeitsgrad EASY
+    // 'remember' sorgt dafür, dass die Instanz nur einmal erzeugt wird, auch wenn die Composable neu gezeichnet wird
+    val game = remember {
+        Game(DifficultyLevel.EASY).apply { generateGame() } // Füllt das Grid mit den Feldern anhand eines Beispiel-Strings
+    }
+
+    GameScreen(
+        grid = game.grid,
+        onBackClick = {}
+    )
 }

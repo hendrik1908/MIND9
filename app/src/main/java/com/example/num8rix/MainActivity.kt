@@ -13,8 +13,7 @@ import com.example.num8rix.ui.screens.StartScreen
 import com.example.num8rix.ui.theme.Num8rixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-
-
+import com.example.num8rix.ui.screens.GameScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -36,16 +35,37 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Num8rixApp() {
     var currentScreen by remember { mutableStateOf("start") }
+    var selectedDifficulty by remember { mutableStateOf<DifficultyLevel?>(null) }
 
     when (currentScreen) {
         "start" -> StartScreen(
-            onInfoClick = { currentScreen = "info" }
+            onInfoClick = { currentScreen = "info" },
+            onSettingsClick = { /* z.B. später */ },
+            onGameStart = { difficulty ->
+                selectedDifficulty = difficulty
+                currentScreen = "game"
+            }
         )
 
         "info" -> InfoScreen(
             onBackClick = { currentScreen = "start" },
             onHomeClick = { currentScreen = "start" }
         )
+
+        "game" -> {
+            // ⚠️ Warten bis Difficulty gesetzt ist
+            selectedDifficulty?.let { difficulty ->
+                val game = remember(difficulty) {
+                    Game(difficulty).apply { generateGame() }
+                }
+                val grid = game.grid
+
+                GameScreen(
+                    grid = grid,
+                    onBackClick = { currentScreen = "start" }
+                )
+            }
+        }
     }
 }
 
