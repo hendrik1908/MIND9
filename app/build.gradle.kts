@@ -65,6 +65,9 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.sqlite.bundled)
     ksp(libs.room.compiler)
+
+    // Dependency für die ViewModel Composable-Funktion
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0") // Überprüfe die neueste Version!
 }
 
 room {

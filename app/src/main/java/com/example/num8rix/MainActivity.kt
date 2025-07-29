@@ -14,6 +14,8 @@ import com.example.num8rix.ui.theme.Num8rixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.num8rix.ui.screens.GameScreen
+import com.example.num8rix.ui.screens.MyDatabaseViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 
 class MainActivity : ComponentActivity() {
@@ -36,6 +38,9 @@ class MainActivity : ComponentActivity() {
 fun Num8rixApp() {
     var currentScreen by remember { mutableStateOf("start") }
     var selectedDifficulty by remember { mutableStateOf<DifficultyLevel?>(null) }
+
+    // Instanzierung des ViewModel und Aufruf der enthaltenen Funktion
+    val databaseViewModel: MyDatabaseViewModel = viewModel()
 
     when (currentScreen) {
         "start" -> StartScreen(
