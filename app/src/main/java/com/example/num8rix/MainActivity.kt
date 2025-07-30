@@ -13,17 +13,34 @@ import androidx.compose.ui.Modifier
 import com.example.num8rix.ui.screens.InfoScreen
 import com.example.num8rix.ui.screens.StartScreen
 import com.example.num8rix.ui.theme.Num8rixTheme
+import com.example.num8rix.ui.screens.MyDatabaseViewModelFactory
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.num8rix.ui.screens.GameScreen
 import com.example.num8rix.ui.screens.MyDatabaseViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.ViewModelProvider
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
+        // Eintrag in DB zum Testen, lädt Daten beim Start des Spiels in DB
+//        val viewModel: MyDatabaseViewModel = ViewModelProvider(
+//            this,
+//            MyDatabaseViewModelFactory(application)
+//        )[MyDatabaseViewModel::class.java]
+//
+//        // Testeintrag hinzufügen (nur einmal beim App-Start)
+//        viewModel.addEinfachEntry(
+//            unsolved  = "1········;·5·······;···███···;·········;·····9···;·········;·███·····;·····3···;·····2···",
+//            solution = "534678912672195348198342567859761423426853791713924856961537284387419625245286179",
+//            solved = false
+//        )
+
         setContent {
             Num8rixTheme {
                 Surface(
