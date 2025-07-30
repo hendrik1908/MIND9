@@ -18,4 +18,7 @@ interface SchwerDao {
 
     @Query("UPDATE schwer SET alreadySolved = :newStatus WHERE id = :itemId")
     suspend fun updateSolvedStatus(itemId: Int, newStatus: Boolean)
+
+    @Query("SELECT * FROM schwer WHERE alreadySolved = 0 ORDER BY RANDOM() LIMIT 1")
+    suspend fun getRandomUnsolved(): Schwer?
 }

@@ -1,16 +1,16 @@
 package com.example.num8rix
 
-class Game(val difficulty: DifficultyLevel) {
+class Game(val unsolvedString: String) {
     val grid = Grid()
 
-    private fun loadVisualGridFromDatabase(difficulty: DifficultyLevel): String {
-        // Platzhalter – hier später Datenbankzugriff
-        return "1········;·5·······;···███···;·········;·········;·········;·███·····;·········;·········"
-    }
+   // Hard Coded Game zum test
+//    private fun loadVisualGridFromDatabase(difficulty: DifficultyLevel): String {
+//        // Platzhalter – hier später Datenbankzugriff
+//        return "1········;·5·······;···███···;·········;·········;·········;·███·····;·········;·········"
+//    }
 
     fun generateGame() {
-        val visualString = loadVisualGridFromDatabase(difficulty)
-        grid.generateGridFromVisualString(visualString)
+        grid.generateGridFromVisualString(unsolvedString)
         grid.printGrid()
     }
 

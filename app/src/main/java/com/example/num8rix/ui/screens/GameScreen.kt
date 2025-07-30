@@ -20,13 +20,45 @@ import com.example.num8rix.DifficultyLevel
 import com.example.num8rix.Game
 import com.example.num8rix.Grid
 
+
 @Composable
 fun GameScreen(
+    difficulty: DifficultyLevel,
+    viewModel: MyDatabaseViewModel,
     grid: Grid,
     onBackClick: () -> Unit = {}
-) {
-    var selectedCell by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+)
+{
+    var game by remember { mutableStateOf<Game?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    var selectedCell by remember { mutableStateOf<Pair<Int, Int>?>(null)}
 
+    // Ruft die Datenbank nur einmal beim ersten Composable-Aufbau auf, Game wird asynchron aufgebaut
+    LaunchedEffect(difficulty) {
+        viewModel.getRandomUnsolvedByDifficulty(difficulty) { unsolvedString ->
+            if (unsolvedString != null) {
+                game = Game(unsolvedString).apply { generateGame() }
+            }
+            isLoading = false
+        }
+    }
+
+    // Ladeanzeige, wenn Spiel noch nicht geladen ist
+    if (isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    if (game == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Kein passendes Rätsel gefunden.")
+        }
+        return
+    }
+
+    val grid = game!!.grid
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -187,19 +219,4 @@ fun ActionButton(label: String, onClick: () -> Unit) {
     ) {
         Text(label, fontSize = 12.sp)
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GameScreenPreview() {
-    // Erstelle eine Instanz von Game mit dem Schwierigkeitsgrad EASY
-    // 'remember' sorgt dafür, dass die Instanz nur einmal erzeugt wird, auch wenn die Composable neu gezeichnet wird
-    val game = remember {
-        Game(DifficultyLevel.EASY).apply { generateGame() } // Füllt das Grid mit den Feldern anhand eines Beispiel-Strings
-    }
-
-    GameScreen(
-        grid = game.grid,
-        onBackClick = {}
-    )
 }

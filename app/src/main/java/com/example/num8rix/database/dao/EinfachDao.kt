@@ -23,4 +23,7 @@ interface EinfachDao {
     //Abfrage um den Boolean Wert auf true zu ändern, wenn das Rätsel erfolgreich gelöst wurde
     @Query("UPDATE einfach SET alreadySolved = :newStatus WHERE id = :itemId")
     suspend fun updateSolvedStatus(itemId: Int, newStatus: Boolean)
+
+    @Query("SELECT * FROM einfach WHERE alreadySolved = 0 ORDER BY RANDOM() LIMIT 1")
+    suspend fun getRandomUnsolved(): Einfach?
 }

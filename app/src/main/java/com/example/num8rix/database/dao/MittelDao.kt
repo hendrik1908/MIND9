@@ -18,4 +18,7 @@ interface MittelDao {
 
     @Query("UPDATE mittel SET alreadySolved = :newStatus WHERE id = :itemId")
     suspend fun updateSolvedStatus(itemId: Int, newStatus: Boolean)
+
+    @Query("SELECT * FROM mittel WHERE alreadySolved = 0 ORDER BY RANDOM() LIMIT 1")
+    suspend fun getRandomUnsolved(): Mittel?
 }
