@@ -1,3 +1,4 @@
+package com.example.num8rix
 /**
  * Serializer-Klasse für Str8ts 9x9 Grid mit hard-codiertem Array
  */

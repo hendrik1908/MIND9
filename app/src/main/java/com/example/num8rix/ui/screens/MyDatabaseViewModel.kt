@@ -11,8 +11,8 @@ import com.example.num8rix.database.entity.Einfach
 import com.example.num8rix.database.entity.Mittel
 import com.example.num8rix.database.entity.Schwer
 import kotlinx.coroutines.launch
-import com.example.num8rix.game.Str8tsGridSerializer // <- Den Import für deine Serializer-Klasse hinzufügen!
-import com.example.num8rix.game.DifficultyLevel // <- Import für das DifficultyLevel Enum
+import com.example.num8rix.Str8tsGridSerializer // <- Den Import für deine Serializer-Klasse hinzufügen!
+import com.example.num8rix.DifficultyLevel // <- Import für das DifficultyLevel Enum
 
 // Enum für die Schwierigkeitsstufen (falls du es noch nicht hast)
 enum class DifficultyLevel {
