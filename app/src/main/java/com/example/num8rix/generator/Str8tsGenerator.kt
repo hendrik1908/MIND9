@@ -1,19 +1,24 @@
 package com.example.num8rix.generator
 
+import com.example.num8rix.generator.GeneratorDifficulty.MEDIUM as MEDIUM1
+
 class Str8tsGenerator {
-    private val grid = Array(9) { IntArray(9) }
-    private val solution = Array(9) { IntArray(9) }
+    val grid = Array(9) { IntArray(9) }
+    val solution = Array(9) { IntArray(9) }
 
     val layout: Array<Array<Int?>> = Array(9) { Array(9) { null } }
 
     private val compartments = mutableListOf<List<Pair<Int, Int>>>()
     private val cellToCompartmentMap = mutableMapOf<Pair<Int, Int>, List<List<Pair<Int, Int>>>>()
     private var debugMode = false
-    private var currentGeneratorDifficulty = GeneratorDifficulty.MEDIUM
+    private var currentGeneratorDifficulty = MEDIUM1
 
     fun isDebugMode() = debugMode
 
-    fun generate(GeneratorDifficulty: GeneratorDifficulty = GeneratorDifficulty.MEDIUM, debug: Boolean = false): Array<IntArray>? {
+    fun generate(
+        GeneratorDifficulty: GeneratorDifficulty = MEDIUM1,
+        debug: Boolean = false
+    ): Array<IntArray>? {
         debugMode = debug
         currentGeneratorDifficulty = GeneratorDifficulty
 
