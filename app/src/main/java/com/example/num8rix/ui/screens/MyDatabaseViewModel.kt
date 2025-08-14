@@ -7,12 +7,16 @@ import com.example.num8rix.MyApplication
 import com.example.num8rix.database.dao.EinfachDao
 import com.example.num8rix.database.dao.MittelDao
 import com.example.num8rix.database.dao.SchwerDao
+import com.example.num8rix.database.dao.GameCacheDao
 import com.example.num8rix.database.entity.Einfach
 import com.example.num8rix.database.entity.Mittel
 import com.example.num8rix.database.entity.Schwer
+import com.example.num8rix.database.entity.GameCache
 import kotlinx.coroutines.launch
 import com.example.num8rix.Str8tsGridSerializer // <- Den Import für deine Serializer-Klasse hinzufügen!
 import com.example.num8rix.DifficultyLevel // <- Import für das DifficultyLevel Enum
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 // Enum für die Schwierigkeitsstufen (falls du es noch nicht hast)
 enum class DifficultyLevel {
@@ -26,12 +30,14 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
     private val einfachDao: EinfachDao
     private val mittelDao: MittelDao
     private val schwerDao: SchwerDao
+    private val gameCacheDao: GameCacheDao
 
     init {
         val appDatabase = (application as MyApplication).database
         einfachDao = appDatabase.einfachDao()
         mittelDao = appDatabase.mittelDao()
         schwerDao = appDatabase.schwerDao()
+        gameCacheDao = appDatabase.gameCacheDao()
     }
 
     // ... andere Funktionen (z.B. updateSolvedStatus) ...
@@ -82,6 +88,51 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
+    /**
+     * Speichert den aktuellen Spielstand (Spielfeld und Notizen) in der Datenbank.
+     * Dies sollte bei jeder Eingabe aufgerufen werden.
+     */
+    fun saveGameState(currentGridString: String, notesGridString: String) {
+        viewModelScope.launch {
+            val newEntry = GameCache(
+                currentGridString = currentGridString,
+                notesGridString = notesGridString
+            )
+            gameCacheDao.insert(newEntry)
+            println("Spielstand wurde in der Datenbank gespeichert.")
+        }
+    }
+
+    /**
+     * Löscht den letzten gespeicherten Spielstand, um die UNDO-Funktion zu realisieren.
+     */
+    fun undoLastMove() {
+        viewModelScope.launch {
+            gameCacheDao.deleteLatestEntry()
+            println("Letzter Spielstand wurde gelöscht.")
+        }
+    }
+
+    /**
+     * Löscht alle gespeicherten Spielstände.
+     * Dies sollte beim Start eines neuen Spiels oder beim erfolgreichen Lösen eines Rätsels aufgerufen werden.
+     */
+    fun clearCache() {
+        viewModelScope.launch {
+            gameCacheDao.clearCache()
+            println("GameCache-Tabelle wurde geleert.")
+        }
+    }
+
+    /**
+     * Ruft den neuesten Spielstand aus dem Cache ab, um ein Spiel fortzusetzen.
+     */
+    fun getLatestGameState(onResult: (GameCache?) -> Unit) {
+        viewModelScope.launch {
+            val latestState = gameCacheDao.getLatestEntry()
+            onResult(latestState)
+        }
+    }
 }
 
 // Str8tsGridSerializer.kt (deine Datei aus dem Upload)
