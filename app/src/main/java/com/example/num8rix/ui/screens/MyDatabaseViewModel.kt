@@ -133,6 +133,22 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
             onResult(latestState)
         }
     }
+    // Nur zum Testen des Screens, damit Eintrag in DB vorhanden ist. Kann bei funktionierendem Algorithmus entfernt werden
+    fun addEinfachEntry(
+        unsolved: String,
+        solution: String,
+        solved: Boolean
+    ) {
+        viewModelScope.launch {
+            val entry = Einfach(
+                unsolvedString = unsolved,
+                solutionString = solution,
+                alreadySolved = solved
+            )
+            einfachDao.insert(entry)
+            println("Beispielrätsel (Einfach) wurde in die DB eingefügt.")
+        }
+    }
 }
 
 // Str8tsGridSerializer.kt (deine Datei aus dem Upload)

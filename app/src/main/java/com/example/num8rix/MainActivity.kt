@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
 
-        // Eintrag in DB zum Testen, lädt Daten beim Start des Spiels in DB
+//        // Eintrag in DB zum Testen, lädt Daten beim Start des Spiels in DB
 //        val viewModel: MyDatabaseViewModel = ViewModelProvider(
 //            this,
 //            MyDatabaseViewModelFactory(application)

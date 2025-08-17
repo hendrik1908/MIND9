@@ -33,6 +33,19 @@ class Grid (){
         return true
     }
 
+    // NEU
+    fun toVisualString(): String {
+        return (0 until GRID_SIZE).joinToString(";") { row ->
+            (0 until GRID_SIZE).joinToString("") { col ->
+                val f = getField(row, col)
+                when {
+                    f.isBlack() -> BLACK_CELL.toString()
+                    f.value == 0 -> EMPTY_WHITE.toString()
+                    else -> f.value.toString()
+                }
+            }
+        }
+    }
 
     fun generateGridFromVisualString(gridString: String) {
         val rows = gridString.split(";")
@@ -44,10 +57,10 @@ class Grid (){
 
             for (col in 0 until 9) {
                 val char = line[col]
-                val field: Field = when (char) {
-                    in '1'..'9' -> Field(FieldColor.WHITE, char.digitToInt())
-                    '·' -> Field(FieldColor.WHITE, 0)
-                    '█' -> Field(FieldColor.BLACK, 0)
+                val field: Field = when {
+                    char in '1'..'9' -> Field(FieldColor.WHITE, isInitial = true).apply { value = char.digitToInt() }
+                    char == '·' -> Field(FieldColor.WHITE, isInitial = false) // leeres Feld
+                    char == '█' -> Field(FieldColor.BLACK, isInitial = true)
                     else -> throw IllegalArgumentException("Invalid character: $char at row $row, col $col")
                 }
                 setField(row, col, field)

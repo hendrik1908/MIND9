@@ -118,7 +118,12 @@ fun GameScreen(
                                 value = if (field.value == 0) "" else field.value.toString(),
                                 isBlack = field.isBlack(),
                                 isSelected = isSelected,
-                                onClick = { selectedCell = row to col },
+                                //Nur weiße & nicht-initiale Felder dürfen ausgewählt werden
+                                onClick = {
+                                    if (!field.isBlack() && !field.isInitial) {
+                                        selectedCell = row to col
+                                    }
+                                },
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -138,7 +143,23 @@ fun GameScreen(
         ) {
             for (i in 1..9) {
                 Button(
-                    onClick = { /* Wert setzen */ },
+                    onClick = {
+                        // Nur setzen, wenn eine Zelle ausgewählt ist
+                        selectedCell?.let { (row, col) ->
+                            val field = grid.getField(row, col)
+
+                            //Prüfen: nur weiße, nicht-initiale Felder dürfen geändert werden
+                            if (field.isWhite() && !field.isInitial) {
+                                field.value = i
+
+                                // Spielstand speichern
+                                viewModel.saveGameState(
+                                    currentGridString = grid.toVisualString(),
+                                    notesGridString = "" // optional für Notizen
+                                )
+                            }
+                        }
+                    },
                     modifier = Modifier.size(36.dp),
                     contentPadding = PaddingValues(0.dp)
                 ) {
@@ -155,11 +176,24 @@ fun GameScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            ActionButton("Löschen") { /* Löschen */ }
-            ActionButton("Notizen") { /* Notizen */ }
-            ActionButton("Hinweis") { /* Hinweis */ }
-            ActionButton("Prüfen") { /* Prüfen */ }
-            ActionButton("Lösen") { /* Lösen */ }
+            ActionButton("Löschen") {
+                selectedCell?.let { (row, col) ->
+                    val field = grid.getField(row, col)
+                    if (!field.isBlack() && !field.isInitial) {
+                        field.value = 0 //Zahl löschen
+
+                        //Spielstand in GameCache speichern nach löschen
+                        viewModel.saveGameState(
+                            currentGridString = grid.toVisualString(),
+                            notesGridString = "" // muss noch befüllt werden
+                        )
+                    }
+                }
+            }
+            ActionButton("Notizen") { /* unverändert */ }
+            ActionButton("Hinweis") { /* unverändert */ }
+            ActionButton("Prüfen") { /* unverändert */ }
+            ActionButton("Lösen") { /* unverändert */ }
         }
     }
 }

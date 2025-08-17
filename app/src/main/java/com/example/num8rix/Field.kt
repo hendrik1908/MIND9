@@ -1,6 +1,14 @@
 package com.example.num8rix
 
-data class Field(var color: FieldColor, var value: Int = 0) {
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
+
+data class Field(
+    var color: FieldColor,
+    val isInitial: Boolean = false
+) {
+    var value by mutableIntStateOf(0) // observable Int State
     fun isWhite() = color == FieldColor.WHITE
     fun isBlack() = color == FieldColor.BLACK
 }
