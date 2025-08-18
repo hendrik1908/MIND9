@@ -9,5 +9,6 @@ data class GameCache(
     val id: Int = 0, // Index-Spalte für die UNDO-Funktion
 
     val currentGridString: String, // Speichert den aktuellen Spielstand
-    val notesGridString: String // Speichert die Notizen
+    val notesGridString: String, // Speichert die Notizen
+    val originalGridString: String // Speichert Vorgegebene Zahlen des Algotithmus
 )

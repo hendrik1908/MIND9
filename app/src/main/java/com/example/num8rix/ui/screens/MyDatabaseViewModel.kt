@@ -15,15 +15,9 @@ import com.example.num8rix.database.entity.GameCache
 import kotlinx.coroutines.launch
 import com.example.num8rix.Str8tsGridSerializer // <- Den Import für deine Serializer-Klasse hinzufügen!
 import com.example.num8rix.DifficultyLevel // <- Import für das DifficultyLevel Enum
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import com.example.num8rix.Grid
 
-// Enum für die Schwierigkeitsstufen (falls du es noch nicht hast)
-enum class DifficultyLevel {
-    EASY,
-    MEDIUM,
-    HARD
-}
+
 
 open class MyDatabaseViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -92,14 +86,25 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
      * Speichert den aktuellen Spielstand (Spielfeld und Notizen) in der Datenbank.
      * Dies sollte bei jeder Eingabe aufgerufen werden.
      */
-    fun saveGameState(currentGridString: String, notesGridString: String) {
+    fun saveGameState(
+        currentGridString: String,
+        notesGridString: String,
+        originalGridString: String? = null
+    ) {
         viewModelScope.launch {
-            val newEntry = GameCache(
+            // Wenn originalGridString mitgegeben wird, nehmen wir das
+            // Sonst nehmen wir das aus dem letzten Eintrag (bleibt gleich)
+            val original = originalGridString ?: run {
+                val existing = gameCacheDao.getLatestEntry()
+                existing?.originalGridString ?: currentGridString
+            }
+
+            val gameState = GameCache(
                 currentGridString = currentGridString,
-                notesGridString = notesGridString
+                notesGridString = notesGridString,
+                originalGridString = original
             )
-            gameCacheDao.insert(newEntry)
-            println("Spielstand wurde in der Datenbank gespeichert.")
+            gameCacheDao.insert(gameState) // Ihre bestehende Methode verwenden
         }
     }
 
@@ -127,10 +132,22 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
     /**
      * Ruft den neuesten Spielstand aus dem Cache ab, um ein Spiel fortzusetzen.
      */
-    fun getLatestGameState(onResult: (GameCache?) -> Unit) {
+    fun getLatestGameStateAsGrid(onResult: (Grid?) -> Unit) {
         viewModelScope.launch {
             val latestState = gameCacheDao.getLatestEntry()
-            onResult(latestState)
+            if (latestState != null) {
+                val grid = Grid()
+
+                // Erst die ursprünglichen Zahlen laden (alle als initial)
+                grid.generateGridFromVisualString(latestState.originalGridString)
+
+                // Dann den aktuellen Stand darüber laden (ohne initial zu ändern)
+                grid.updateGridFromVisualString(latestState.currentGridString)
+                grid.generateNotesFromString(latestState.notesGridString)
+                onResult(grid)
+            } else {
+                onResult(null)
+            }
         }
     }
     // Nur zum Testen des Screens, damit Eintrag in DB vorhanden ist. Kann bei funktionierendem Algorithmus entfernt werden

@@ -13,9 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.num8rix.DifficultyLevel
 import com.example.num8rix.Game
 import com.example.num8rix.Grid
@@ -25,21 +23,40 @@ import com.example.num8rix.Grid
 fun GameScreen(
     difficulty: DifficultyLevel,
     viewModel: MyDatabaseViewModel,
-    grid: Grid,
     onBackClick: () -> Unit = {}
 )
 {
     var game by remember { mutableStateOf<Game?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var selectedCell by remember { mutableStateOf<Pair<Int, Int>?>(null)}
+    var isNoteMode by remember { mutableStateOf(false) }
+    var grid by remember { mutableStateOf<Grid?>(null) }
+
 
     // Ruft die Datenbank nur einmal beim ersten Composable-Aufbau auf, Game wird asynchron aufgebaut
     LaunchedEffect(difficulty) {
-        viewModel.getRandomUnsolvedByDifficulty(difficulty) { unsolvedString ->
-            if (unsolvedString != null) {
-                game = Game(unsolvedString).apply { generateGame() }
+        viewModel.getLatestGameStateAsGrid { cachedGrid ->
+            if (cachedGrid != null) {
+                grid = cachedGrid
+                game = Game.fromGrid(cachedGrid)
+                isLoading = false
+            } else {
+                viewModel.getRandomUnsolvedByDifficulty(difficulty) { unsolvedString ->
+                    if (unsolvedString != null) {
+                        val newGame = Game(unsolvedString).apply { generateGame() }
+                        grid = newGame.grid
+                        game = newGame
+
+                        // EINMALIG: Erstes Speichern mit Original
+                        viewModel.saveGameState(
+                            currentGridString = newGame.grid.toVisualString(),
+                            notesGridString = newGame.grid.notesToString(),
+                            originalGridString = unsolvedString // NUR HIER mitgeben
+                        )
+                    }
+                    isLoading = false
+                }
             }
-            isLoading = false
         }
     }
 
@@ -58,7 +75,14 @@ fun GameScreen(
         return
     }
 
-    val grid = game!!.grid
+    val currentGrid = grid
+    if (currentGrid == null) {
+        // Ladeanzeige oder return
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -111,13 +135,15 @@ fun GameScreen(
                 for (row in 0 until 9) {
                     Row(modifier = Modifier.weight(1f)) {
                         for (col in 0 until 9) {
-                            val field = grid.getField(row, col)
+                            val field = currentGrid.getField(row, col)
                             val isSelected = selectedCell == row to col
 
                             SudokuCell(
                                 value = if (field.value == 0) "" else field.value.toString(),
                                 isBlack = field.isBlack(),
                                 isSelected = isSelected,
+                                notes = field.notes,
+                                isInitial = field.isInitial, // NEU hinzugefügt
                                 //Nur weiße & nicht-initiale Felder dürfen ausgewählt werden
                                 onClick = {
                                     if (!field.isBlack() && !field.isInitial) {
@@ -146,16 +172,28 @@ fun GameScreen(
                     onClick = {
                         // Nur setzen, wenn eine Zelle ausgewählt ist
                         selectedCell?.let { (row, col) ->
-                            val field = grid.getField(row, col)
+                            val field = currentGrid.getField(row, col)
 
                             //Prüfen: nur weiße, nicht-initiale Felder dürfen geändert werden
                             if (field.isWhite() && !field.isInitial) {
-                                field.value = i
-
-                                // Spielstand speichern
+                                if (isNoteMode) {
+                                    // NEU: Note einfügen oder entfernen
+                                    if (field.notes.contains(i)) {
+                                        field.notes.remove(i)
+                                    } else {
+                                        field.notes.add(i)
+                                    }
+                                    field.value = 0 // Nur Notizen, kein Wert
+                                } else {
+                                    // Normalmodus → Wert setzen & Notizen löschen
+                                    field.value = i
+                                    field.notes.clear()
+                                }
+                                grid = currentGrid.copy()
+                                // Spielstand speichern (jetzt inkl. Notizen)
                                 viewModel.saveGameState(
-                                    currentGridString = grid.toVisualString(),
-                                    notesGridString = "" // optional für Notizen
+                                    currentGridString = currentGrid.toVisualString(),
+                                    notesGridString = currentGrid.notesToString(),
                                 )
                             }
                         }
@@ -178,19 +216,39 @@ fun GameScreen(
         ) {
             ActionButton("Löschen") {
                 selectedCell?.let { (row, col) ->
-                    val field = grid.getField(row, col)
+                    val field = currentGrid.getField(row, col)
                     if (!field.isBlack() && !field.isInitial) {
                         field.value = 0 //Zahl löschen
-
+                        field.notes.clear()
+                        grid = currentGrid.copy()
                         //Spielstand in GameCache speichern nach löschen
                         viewModel.saveGameState(
-                            currentGridString = grid.toVisualString(),
-                            notesGridString = "" // muss noch befüllt werden
+                            currentGridString = currentGrid.toVisualString(),
+                            notesGridString = currentGrid.notesToString(),
                         )
                     }
                 }
             }
-            ActionButton("Notizen") { /* unverändert */ }
+            OutlinedButton(
+                onClick = { isNoteMode = !isNoteMode },
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = if (isNoteMode) Color(0xFF1976D2) else Color.Transparent,
+                    contentColor = if (isNoteMode) Color.White else Color.Unspecified
+                ),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = if (isNoteMode) Color(0xFF1976D2) else Color(0xFF79747E)
+                ),
+                shape = CircleShape,
+                modifier = Modifier.height(36.dp),
+                elevation = if (isNoteMode) ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp) else null
+            ) {
+                Text(
+                    text = "Notizen",
+                    fontSize = 12.sp,
+                    fontWeight = if (isNoteMode) FontWeight.Bold else FontWeight.Normal
+                )
+            }
             ActionButton("Hinweis") { /* unverändert */ }
             ActionButton("Prüfen") { /* unverändert */ }
             ActionButton("Lösen") { /* unverändert */ }
@@ -218,7 +276,9 @@ fun SudokuCell(
     isBlack: Boolean,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    notes: Set<Int> = emptySet(),
+    isInitial: Boolean = false // NEU hinzugefügt
 ) {
     Box(
         contentAlignment = Alignment.Center,
@@ -234,16 +294,55 @@ fun SudokuCell(
             )
             .clickable { if (!isBlack) onClick() }
     ) {
-        if (!isBlack && value.isNotEmpty()) {
-            Text(
-                text = value,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium
-            )
+        when {
+            value.isNotEmpty() -> { // normale Zahl
+                Text(
+                    text = value,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = if (isInitial) Color.Black else Color.Blue // Schwarz für initiale, Blau für Spieler-Zahlen
+                )
+            }
+            notes.isNotEmpty() -> { // Notizen im 3x3 Grid
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(1.dp), // Minimaler Abstand
+                    verticalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    for (r in 0 until 3) {
+                        Row(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            for (c in 0 until 3) {
+                                val num = r * 3 + c + 1
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = if (notes.contains(num)) num.toString() else "",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Light,
+                                        color = Color.Blue,
+                                        textAlign = TextAlign.Center,
+                                        lineHeight = 10.sp, // Verhindert Abschneiden
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
-
 @Composable
 fun ActionButton(label: String, onClick: () -> Unit) {
     OutlinedButton(

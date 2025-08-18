@@ -1,7 +1,7 @@
 package com.example.num8rix
 
 class Game(val unsolvedString: String) {
-    val grid = Grid()
+    var grid = Grid()
 
    // Hard Coded Game zum test
 //    private fun loadVisualGridFromDatabase(difficulty: DifficultyLevel): String {
@@ -17,6 +17,10 @@ class Game(val unsolvedString: String) {
     fun startGame() {
         grid.printGrid()
     }
-
+    companion object {
+        fun fromGrid(grid: Grid): Game {
+            return Game("").apply { this.grid = grid }
+        }
+    }
 
 }

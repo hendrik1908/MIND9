@@ -13,14 +13,13 @@ import androidx.compose.ui.Modifier
 import com.example.num8rix.ui.screens.InfoScreen
 import com.example.num8rix.ui.screens.StartScreen
 import com.example.num8rix.ui.theme.Num8rixTheme
-import com.example.num8rix.ui.screens.MyDatabaseViewModelFactory
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.num8rix.ui.screens.GameScreen
 import com.example.num8rix.ui.screens.MyDatabaseViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.ViewModelProvider
+
 
 
 class MainActivity : ComponentActivity() {
@@ -94,7 +93,6 @@ fun Num8rixApp() {
                 GameScreen(
                     difficulty = difficulty,
                     viewModel = databaseViewModel,
-                    grid = game.grid,
                     onBackClick = {
                         currentScreen = "start"
                         selectedDifficulty = null
