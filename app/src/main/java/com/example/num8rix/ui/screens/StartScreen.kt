@@ -41,7 +41,7 @@ fun StartScreen(
             Spacer(modifier = Modifier.width(24.dp)) // Platzhalter für Symmetrie
 
             Text(
-                text = "Num8rix",
+                text = "MIND9",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black

@@ -101,7 +101,7 @@ fun GameScreen(
                 )
             }
             Text(
-                text = "Num8rix",
+                text = "MIND9",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f),
@@ -110,18 +110,10 @@ fun GameScreen(
             Spacer(modifier = Modifier.width(48.dp)) // Platzhalter rechts
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(25.dp))
 
         // Zeit + Züge Anzeige
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            StatBox(label = "Zeit", value = "00:00")
-            StatBox(label = "Züge", value = "0")
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
 
         // 9x9 Gitter – jetzt mit echtem Grid!
         Box(
