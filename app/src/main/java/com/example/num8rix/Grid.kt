@@ -133,7 +133,7 @@ class Grid (){
             for (col in 0 until 9) {
                 val char = line[col]
                 val field: Field = when {
-                    char in '1'..'9' -> Field(FieldColor.WHITE, isInitial = false).apply { value = char.digitToInt() }
+                    char in '1'..'9' -> Field(FieldColor.WHITE, isInitial = true).apply { value = char.digitToInt() }
                     char == '·' -> Field(FieldColor.WHITE, isInitial = false) // leeres Feld
                     char == '█' -> Field(FieldColor.BLACK, isInitial = true)
                     else -> throw IllegalArgumentException("Invalid character: $char at row $row, col $col")

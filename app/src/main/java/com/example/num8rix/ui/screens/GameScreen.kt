@@ -210,10 +210,15 @@ fun GameScreen(
 
 
         // Buttons unten
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
+        @OptIn(ExperimentalLayoutApi::class)
+        FlowRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            maxItemsInEachRow = 3
+        )  {
             ActionButton("Löschen") {
                 selectedCell?.let { (row, col) ->
                     val field = currentGrid.getField(row, col)
@@ -252,9 +257,21 @@ fun GameScreen(
             ActionButton("Hinweis") { /* unverändert */ }
             ActionButton("Prüfen") { /* unverändert */ }
             ActionButton("Lösen") { /* unverändert */ }
+            // Zurück-Button für Undo
+            // Zurück-Button für Undo
+            ActionButton("Zurück") {
+                viewModel.undoLastMove { restoredGrid, restoredNotes ->
+                    grid?.let {
+                        it.updateGridFromVisualString(restoredGrid)
+                        it.generateNotesFromString(restoredNotes)
+                        grid = it.copy() // <--- Neu: löst Recompose aus
+                    }
+                }
+            }
+            }
+
         }
     }
-}
 
 @Composable
 fun StatBox(label: String, value: String) {

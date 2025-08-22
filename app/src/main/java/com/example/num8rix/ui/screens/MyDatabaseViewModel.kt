@@ -111,13 +111,15 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
     /**
      * Löscht den letzten gespeicherten Spielstand, um die UNDO-Funktion zu realisieren.
      */
-    fun undoLastMove() {
+    fun undoLastMove(onGridRestored: (String, String) -> Unit) {
         viewModelScope.launch {
             gameCacheDao.deleteLatestEntry()
-            println("Letzter Spielstand wurde gelöscht.")
+            val latest = gameCacheDao.getLatestEntry()
+            latest?.let {
+                onGridRestored(it.currentGridString, it.notesGridString)
+            }
         }
     }
-
     /**
      * Löscht alle gespeicherten Spielstände.
      * Dies sollte beim Start eines neuen Spiels oder beim erfolgreichen Lösen eines Rätsels aufgerufen werden.
