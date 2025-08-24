@@ -23,7 +23,8 @@ import com.example.num8rix.DifficultyLevel
 fun StartScreen(
     onInfoClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
-    onGameStart: (DifficultyLevel) -> Unit = {}
+    onGameStart: (DifficultyLevel) -> Unit = {},
+    onGeneratorClick: () -> Unit = {} // NEU: Callback für Generator-Screen
 ) {
     Column(
         modifier = Modifier
@@ -103,6 +104,28 @@ fun StartScreen(
                 isPrimary = false,
                 onClick = { onGameStart(DifficultyLevel.HARD) }
             )
+
+            // NEU: Generator Button
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = onGeneratorClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(28.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2196F3), // Blauer Akzent für Generator
+                    contentColor = Color.White
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+            ) {
+                Text(
+                    text = "Rätsel Generieren",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
 
         // Bottom Navigation (nur Home und Info)
@@ -156,7 +179,6 @@ fun DifficultyButton(
         )
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

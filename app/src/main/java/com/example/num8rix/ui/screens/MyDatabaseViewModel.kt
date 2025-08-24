@@ -152,6 +152,18 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
             }
         }
     }
+    /**
+     * Gibt die Gesamtzahl der Rätsel für alle Schwierigkeitsgrade zurück
+     */
+    fun getTotalPuzzleCounts(onResult: (Int, Int, Int) -> Unit) {
+        viewModelScope.launch {
+            val easyCount = einfachDao.getTotalCount()
+            val mediumCount = mittelDao.getTotalCount()
+            val hardCount = schwerDao.getTotalCount()
+            onResult(easyCount, mediumCount, hardCount)
+        }
+    }
+
     // Nur zum Testen des Screens, damit Eintrag in DB vorhanden ist. Kann bei funktionierendem Algorithmus entfernt werden
     fun addEinfachEntry(
         unsolved: String,

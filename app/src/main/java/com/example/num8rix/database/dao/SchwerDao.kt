@@ -21,4 +21,12 @@ interface SchwerDao {
 
     @Query("SELECT * FROM schwer WHERE alreadySolved = 0 ORDER BY RANDOM() LIMIT 1")
     suspend fun getRandomUnsolved(): Schwer?
+
+    // NEU: Duplikatsprüfung für die Generierung
+    @Query("SELECT COUNT(*) > 0 FROM schwer WHERE unsolvedString = :unsolvedString")
+    suspend fun puzzleExists(unsolvedString: String): Boolean
+
+    // NEU: Zählt alle Rätsel dieser Schwierigkeit
+    @Query("SELECT COUNT(*) FROM schwer")
+    suspend fun getTotalCount(): Int
 }

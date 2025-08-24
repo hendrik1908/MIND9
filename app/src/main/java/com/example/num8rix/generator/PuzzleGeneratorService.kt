@@ -27,12 +27,13 @@ class PuzzleGeneratorService {
 
     /**
      * Mappt App-Schwierigkeit auf Generator-Schwierigkeit
+     * WICHTIG: HARD wird übersprungen, stattdessen wird EXPERT für schwere Rätsel verwendet
      */
     private fun mapDifficulty(appDifficulty: DifficultyLevel): GeneratorDifficulty {
         return when(appDifficulty) {
             DifficultyLevel.EASY -> GeneratorDifficulty.EASY
             DifficultyLevel.MEDIUM -> GeneratorDifficulty.MEDIUM
-            DifficultyLevel.HARD -> GeneratorDifficulty.HARD
+            DifficultyLevel.HARD -> GeneratorDifficulty.EXPERT // ← EXPERT statt HARD verwenden
         }
     }
 

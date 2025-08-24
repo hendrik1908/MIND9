@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.example.num8rix.ui.screens.InfoScreen
 import com.example.num8rix.ui.screens.StartScreen
+import com.example.num8rix.ui.screens.GeneratorScreen // Originaler Generator mit Simple Service
 import com.example.num8rix.ui.theme.Num8rixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -73,12 +74,19 @@ fun Num8rixApp() {
                     unsolvedString = result
                     currentScreen = "game"
                 }
-            }
+            },
+            onGeneratorClick = { currentScreen = "generator" } // NEU: Navigation zum Generator
         )
 
         "info" -> InfoScreen(
             onBackClick = { currentScreen = "start" },
             onHomeClick = { currentScreen = "start" }
+        )
+
+        // NEU: Generator Screen (Simple Service)
+        "generator" -> GeneratorScreen(
+            viewModel = databaseViewModel,
+            onBackClick = { currentScreen = "start" }
         )
 
         "game" -> {

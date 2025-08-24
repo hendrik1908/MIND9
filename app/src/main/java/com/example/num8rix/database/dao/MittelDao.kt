@@ -21,4 +21,13 @@ interface MittelDao {
 
     @Query("SELECT * FROM mittel WHERE alreadySolved = 0 ORDER BY RANDOM() LIMIT 1")
     suspend fun getRandomUnsolved(): Mittel?
+
+
+    // NEU: Duplikatsprüfung für die Generierung
+    @Query("SELECT COUNT(*) > 0 FROM mittel WHERE unsolvedString = :unsolvedString")
+    suspend fun puzzleExists(unsolvedString: String): Boolean
+
+    // NEU: Zählt alle Rätsel dieser Schwierigkeit
+    @Query("SELECT COUNT(*) FROM mittel")
+    suspend fun getTotalCount(): Int
 }
