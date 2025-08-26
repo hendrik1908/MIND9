@@ -7,17 +7,14 @@ import android.content.IntentFilter
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,6 +23,7 @@ import com.example.num8rix.DifficultyLevel
 import com.example.num8rix.generator.PuzzleGenerationService
 import kotlin.math.max
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GeneratorScreen(
     viewModel: MyDatabaseViewModel,
@@ -48,10 +46,17 @@ fun GeneratorScreen(
     
     var totalCounts by remember { mutableStateOf(Triple(0, 0, 0)) }
     
-    // Lade aktuelle Rätsel-Anzahlen
+    // Prüfe beim Start ob Service bereits läuft
     LaunchedEffect(Unit) {
         viewModel.getTotalPuzzleCounts { easy, medium, hard ->
             totalCounts = Triple(easy, medium, hard)
+        }
+        
+        // Prüfe ob PuzzleGenerationService bereits läuft
+        if (PuzzleGenerationService.isServiceRunning(context)) {
+            isGenerating = true
+            // Versuche aktuelle Progress-Daten zu erhalten
+            PuzzleGenerationService.requestCurrentStatus(context)
         }
     }
     
@@ -61,13 +66,23 @@ fun GeneratorScreen(
             override fun onReceive(context: Context?, intent: Intent?) {
                 when (intent?.action) {
                     PuzzleGenerationService.ACTION_PROGRESS_UPDATE -> {
-                        currentProgress = intent.getIntExtra(PuzzleGenerationService.EXTRA_CURRENT_PROGRESS, 0)
-                        totalPuzzles = intent.getIntExtra(PuzzleGenerationService.EXTRA_TOTAL_PUZZLES, 0)
-                        currentDifficulty = intent.getStringExtra(PuzzleGenerationService.EXTRA_CURRENT_DIFFICULTY) ?: ""
+                        val newProgress = intent.getIntExtra(PuzzleGenerationService.EXTRA_CURRENT_PROGRESS, 0)
+                        val newTotal = intent.getIntExtra(PuzzleGenerationService.EXTRA_TOTAL_PUZZLES, 0)
+                        val newDifficulty = intent.getStringExtra(PuzzleGenerationService.EXTRA_CURRENT_DIFFICULTY) ?: ""
+                        
+                        // Explizite State Updates für Live-Updates
+                        currentProgress = newProgress
+                        totalPuzzles = newTotal
+                        currentDifficulty = newDifficulty
+                        isGenerating = true
                     }
                     PuzzleGenerationService.ACTION_GENERATION_COMPLETE -> {
                         isGenerating = false
+                        currentProgress = 0
+                        totalPuzzles = 0
+                        currentDifficulty = ""
                         showCompleteDialog = true
+                        
                         // Aktualisiere Rätsel-Anzahlen
                         viewModel.getTotalPuzzleCounts { easy, medium, hard ->
                             totalCounts = Triple(easy, medium, hard)
@@ -75,188 +90,258 @@ fun GeneratorScreen(
                     }
                     PuzzleGenerationService.ACTION_GENERATION_ERROR -> {
                         isGenerating = false
+                        currentProgress = 0
+                        totalPuzzles = 0
+                        currentDifficulty = ""
                         errorMessage = intent.getStringExtra(PuzzleGenerationService.EXTRA_ERROR_MESSAGE) ?: "Unbekannter Fehler"
                         showErrorDialog = true
+                    }
+                    PuzzleGenerationService.ACTION_SERVICE_STATUS -> {
+                        val serviceRunning = intent.getBooleanExtra(PuzzleGenerationService.EXTRA_SERVICE_RUNNING, false)
+                        
+                        if (serviceRunning) {
+                            val statusProgress = intent.getIntExtra(PuzzleGenerationService.EXTRA_CURRENT_PROGRESS, 0)
+                            val statusTotal = intent.getIntExtra(PuzzleGenerationService.EXTRA_TOTAL_PUZZLES, 0)
+                            val statusDifficulty = intent.getStringExtra(PuzzleGenerationService.EXTRA_CURRENT_DIFFICULTY) ?: ""
+                            
+                            isGenerating = true
+                            currentProgress = statusProgress
+                            totalPuzzles = statusTotal
+                            currentDifficulty = statusDifficulty
+                        } else {
+                            isGenerating = false
+                        }
                     }
                 }
             }
         }
         
+        // Verbesserte Registrierung mit EXPORTED Flag
         val intentFilter = IntentFilter().apply {
             addAction(PuzzleGenerationService.ACTION_PROGRESS_UPDATE)
             addAction(PuzzleGenerationService.ACTION_GENERATION_COMPLETE)
             addAction(PuzzleGenerationService.ACTION_GENERATION_ERROR)
+            addAction(PuzzleGenerationService.ACTION_SERVICE_STATUS)
         }
 
-        ContextCompat.registerReceiver(
-            context,
-            receiver,
-            intentFilter,
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
+        // Verwende RECEIVER_EXPORTED für Service Communication
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.registerReceiver(
+                context,
+                receiver,
+                intentFilter,
+                ContextCompat.RECEIVER_EXPORTED
+            )
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            context.registerReceiver(receiver, intentFilter)
+        }
         
         onDispose {
-            context.unregisterReceiver(receiver)
+            try {
+                context.unregisterReceiver(receiver)
+            } catch (e: Exception) {
+                // Receiver war bereits unregistriert
+            }
         }
     }
     
+    // Proper Window Insets für Punchhole/Statusbar
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
-            .padding(16.dp)
+            .statusBarsPadding()
+            .navigationBarsPadding()
     ) {
-        // Header
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Zurück"
-                )
-            }
-            Text(
-                text = "Rätsel Generieren",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.width(48.dp))
-        }
         
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // Status-Anzeige der vorhandenen Rätsel
-        Card(
+        // Header mit verbessertem Spacing
+        Surface(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            color = Color.White,
+            shadowElevation = 2.dp
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "Vorhandene Rätsel in der Datenbank",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    PuzzleCountDisplay("Einfach", totalCounts.first)
-                    PuzzleCountDisplay("Mittel", totalCounts.second)
-                    PuzzleCountDisplay("Schwer", totalCounts.third)
-                }
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        if (isGenerating) {
-            // Fortschrittsanzeige
-            GenerationProgressCard(currentProgress, totalPuzzles, currentDifficulty)
-        } else {
-            // Eingabeformular
-            Text(
-                text = "Neue Rätsel generieren",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            
-            DifficultyInputCard(
-                title = "Einfach",
-                count = easyCount,
-                onCountChange = { easyCount = it }
-            )
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            DifficultyInputCard(
-                title = "Mittel",
-                count = mediumCount,
-                onCountChange = { mediumCount = it }
-            )
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            DifficultyInputCard(
-                title = "Schwer",
-                count = hardCount,
-                onCountChange = { hardCount = it }
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-    // Generieren Button
-            Button(
-                onClick = {
-                    val total = easyCount + mediumCount + hardCount
-                    if (total > 0) {
-                        // Prüfe Notification Permission (Android 13+)
-                        try {
-                            isGenerating = true
-                            currentProgress = 0
-                            totalPuzzles = total
-                            PuzzleGenerationService.startGeneration(
-                                context,
-                                easyCount,
-                                mediumCount,
-                                hardCount
-                            )
-                        } catch (e: Exception) {
-                            isGenerating = false
-                            errorMessage = "Fehler beim Starten: ${e.message}"
-                            showErrorDialog = true
-                        }
-                    }
-                },
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black,
-                    contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(12.dp),
-                enabled = !isGenerating && (easyCount + mediumCount + hardCount) > 0
+                    .padding(horizontal = 8.dp, vertical = 12.dp)
             ) {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Zurück",
+                        tint = Color(0xFF2C2C2C)
+                    )
+                }
                 Text(
-                    text = "Generierung starten",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    text = "Rätsel Generieren",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center,
+                    color = Color(0xFF2C2C2C)
                 )
+                Spacer(modifier = Modifier.width(48.dp))
             }
         }
         
-        // Hinweise
-        Spacer(modifier = Modifier.weight(1f))
-        
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3CD))
+        // Scrollable Content
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Status-Anzeige der vorhandenen Rätsel
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                Text(
-                    text = "💡 Hinweise:",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF856404)
-                )
-                Text(
-                    text = "• Die Generierung läuft im Hintergrund\n• Sie können die App währenddessen nutzen\n• Duplikate werden automatisch vermieden\n• Schwere Rätsel nutzen EXPERT-Algorithmus",
-                    fontSize = 12.sp,
-                    color = Color(0xFF856404),
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+                Column(
+                    modifier = Modifier.padding(20.dp)
+                ) {
+                    Text(
+                        text = "Vorhandene Rätsel in der Datenbank",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF2C2C2C),
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        PuzzleCountDisplay("Einfach", totalCounts.first)
+                        PuzzleCountDisplay("Mittel", totalCounts.second)
+                        PuzzleCountDisplay("Schwer", totalCounts.third)
+                    }
+                }
             }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            if (isGenerating) {
+                // Verbesserter Fortschrittsbalken mit Live-Updates
+                GenerationProgressCard(
+                    currentProgress = currentProgress,
+                    totalPuzzles = totalPuzzles, 
+                    currentDifficulty = currentDifficulty
+                )
+                
+            } else {
+                // Eingabeformular
+                Text(
+                    text = "Neue Rätsel generieren",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF2C2C2C),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                DifficultyInputCard(
+                    title = "Einfach",
+                    count = easyCount,
+                    onCountChange = { easyCount = it }
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                DifficultyInputCard(
+                    title = "Mittel", 
+                    count = mediumCount,
+                    onCountChange = { mediumCount = it }
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                DifficultyInputCard(
+                    title = "Schwer",
+                    count = hardCount,
+                    onCountChange = { hardCount = it }
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                // Generieren Button
+                Button(
+                    onClick = {
+                        val total = easyCount + mediumCount + hardCount
+                        if (total > 0) {
+                            try {
+                                // Sofort UI State setzen für bessere Responsivität
+                                isGenerating = true
+                                currentProgress = 0
+                                totalPuzzles = total
+                                currentDifficulty = "Wird gestartet..."
+                                
+                                PuzzleGenerationService.startGeneration(
+                                    context,
+                                    easyCount,
+                                    mediumCount,
+                                    hardCount
+                                )
+                            } catch (e: Exception) {
+                                isGenerating = false
+                                errorMessage = "Fehler beim Starten: ${e.message}"
+                                showErrorDialog = true
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF2C2C2C),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !isGenerating && (easyCount + mediumCount + hardCount) > 0
+                ) {
+                    Text(
+                        text = "Generierung starten",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // Hinweise
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "💡 Hinweise:",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF8A6400)
+                    )
+                    Text(
+                        text = "• Die Generierung läuft im Hintergrund\n" +
+                               "• Sie erhalten eine Benachrichtigung bei Abschluss\n" +
+                               "• Duplikate werden automatisch vermieden",
+                        fontSize = 12.sp,
+                        color = Color(0xFF8A6400),
+                        modifier = Modifier.padding(top = 8.dp),
+                        lineHeight = 16.sp
+                    )
+                }
+            }
+            
+            // Extra Padding am Ende für besseres Scrolling
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
     
@@ -265,12 +350,32 @@ fun GeneratorScreen(
         AlertDialog(
             onDismissRequest = { showCompleteDialog = false },
             confirmButton = {
-                TextButton(onClick = { showCompleteDialog = false }) {
-                    Text("OK")
+                TextButton(
+                    onClick = { 
+                        showCompleteDialog = false 
+                        viewModel.getTotalPuzzleCounts { easy, medium, hard ->
+                            totalCounts = Triple(easy, medium, hard)
+                        }
+                    }
+                ) {
+                    Text("Verstanden", color = Color(0xFF2C2C2C))
                 }
             },
-            title = { Text("✅ Erfolgreich!") },
-            text = { Text("Alle Rätsel wurden erfolgreich generiert und in die Datenbank eingefügt.") }
+            title = { 
+                Text(
+                    "✅ Generierung abgeschlossen!",
+                    color = Color(0xFF2C2C2C),
+                    fontWeight = FontWeight.Bold
+                ) 
+            },
+            text = { 
+                Text(
+                    "Alle Rätsel wurden erfolgreich generiert und in die Datenbank eingefügt. Sie können jetzt neue Spiele starten!",
+                    color = Color(0xFF454545),
+                    lineHeight = 20.sp
+                ) 
+            },
+            containerColor = Color.White
         )
     }
     
@@ -280,11 +385,24 @@ fun GeneratorScreen(
             onDismissRequest = { showErrorDialog = false },
             confirmButton = {
                 TextButton(onClick = { showErrorDialog = false }) {
-                    Text("OK")
+                    Text("OK", color = Color(0xFFD32F2F))
                 }
             },
-            title = { Text("❌ Fehler") },
-            text = { Text("Fehler bei der Generierung: $errorMessage") }
+            title = { 
+                Text(
+                    "❌ Fehler bei der Generierung",
+                    color = Color(0xFFD32F2F),
+                    fontWeight = FontWeight.Bold
+                ) 
+            },
+            text = { 
+                Text(
+                    "Fehler: $errorMessage\n\nBitte versuchen Sie es erneut.",
+                    color = Color(0xFF454545),
+                    lineHeight = 20.sp
+                ) 
+            },
+            containerColor = Color.White
         )
     }
 }
@@ -296,14 +414,15 @@ fun PuzzleCountDisplay(title: String, count: Int) {
     ) {
         Text(
             text = count.toString(),
-            fontSize = 24.sp,
+            fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black
+            color = Color(0xFF2C2C2C)
         )
         Text(
             text = title,
-            fontSize = 12.sp,
-            color = Color.Gray
+            fontSize = 13.sp,
+            color = Color(0xFF757575),
+            fontWeight = FontWeight.Medium
         )
     }
 }
@@ -316,54 +435,63 @@ fun DifficultyInputCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = title,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF2C2C2C)
             )
             
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                IconButton(
+                FilledTonalIconButton(
                     onClick = { onCountChange(max(0, count - 1)) },
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(40.dp),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = Color(0xFFF5F5F5),
+                        contentColor = Color(0xFF2C2C2C)
+                    )
                 ) {
                     Text(
-                        text = "-",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        text = "−",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
                 
                 Text(
                     text = count.toString(),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.widthIn(min = 32.dp),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF2C2C2C),
+                    modifier = Modifier.widthIn(min = 40.dp),
                     textAlign = TextAlign.Center
                 )
                 
-                IconButton(
+                FilledTonalIconButton(
                     onClick = { onCountChange(count + 1) },
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(40.dp),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = Color(0xFF2C2C2C),
+                        contentColor = Color.White
+                    )
                 ) {
                     Text(
                         text = "+",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -379,7 +507,8 @@ fun GenerationProgressCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -388,34 +517,64 @@ fun GenerationProgressCard(
             Text(
                 text = "Rätsel werden generiert...",
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(bottom = 16.dp)
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF2C2C2C),
+                modifier = Modifier.padding(bottom = 20.dp)
             )
             
+            // Korrekte Progress-Berechnung mit Sicherheitscheck
+            val progress = remember(currentProgress, totalPuzzles) {
+                if (totalPuzzles > 0) {
+                    (currentProgress.toFloat() / totalPuzzles.toFloat()).coerceIn(0f, 1f)
+                } else {
+                    0f
+                }
+            }
+            
             LinearProgressIndicator(
-                progress = if (totalPuzzles > 0) currentProgress.toFloat() / totalPuzzles else 0f,
+                progress = { progress }, 
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp),
-                color = Color.Black,
-                trackColor = Color.Gray.copy(alpha = 0.3f)
+                    .height(12.dp),
+                color = Color(0xFF4CAF50),
+                trackColor = Color(0xFFE0E0E0),
+                strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
             )
             
             Spacer(modifier = Modifier.height(16.dp))
             
+            // Fortschritt in Zahlen
             Text(
                 text = "$currentProgress von $totalPuzzles erstellt",
                 fontSize = 16.sp,
-                color = Color.Black
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF2C2C2C)
+            )
+            
+            // Prozentanzeige
+            Text(
+                text = "${(progress * 100).toInt()}% abgeschlossen",
+                fontSize = 14.sp,
+                color = Color(0xFF757575),
+                modifier = Modifier.padding(top = 4.dp)
             )
             
             if (currentDifficulty.isNotEmpty()) {
-                Text(
-                    text = "Aktuell: $currentDifficulty",
-                    fontSize = 14.sp,
-                    color = Color.Gray,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color(0xFFF3E5F5),
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    Text(
+                        text = "Aktuell: $currentDifficulty",
+                        fontSize = 14.sp,
+                        color = Color(0xFF7B1FA2),
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                    )
+                }
             }
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -423,8 +582,9 @@ fun GenerationProgressCard(
             Text(
                 text = "Die Generierung läuft im Hintergrund. Sie können die App weiter nutzen.",
                 fontSize = 12.sp,
-                color = Color.Gray,
-                textAlign = TextAlign.Center
+                color = Color(0xFF757575),
+                textAlign = TextAlign.Center,
+                lineHeight = 16.sp
             )
         }
     }
