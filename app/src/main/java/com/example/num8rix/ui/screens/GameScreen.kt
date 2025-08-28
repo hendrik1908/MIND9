@@ -3,7 +3,6 @@ package com.example.num8rix.ui.screens
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -35,7 +34,7 @@ fun GameScreen(
 
     // Ruft die Datenbank nur einmal beim ersten Composable-Aufbau auf, Game wird asynchron aufgebaut
     LaunchedEffect(difficulty) {
-        viewModel.getLatestGameStateAsGrid { cachedGrid ->
+        viewModel.getLatestGameStateAsGrid(difficulty) { cachedGrid ->
             if (cachedGrid != null) {
                 grid = cachedGrid
                 game = Game.fromGrid(cachedGrid)
@@ -51,7 +50,7 @@ fun GameScreen(
                         viewModel.saveGameState(
                             currentGridString = newGame.grid.toVisualString(),
                             notesGridString = newGame.grid.notesToString(),
-                            originalGridString = unsolvedString // NUR HIER mitgeben
+                            difficulty = difficulty
                         )
                     }
                     isLoading = false
@@ -185,10 +184,11 @@ fun GameScreen(
                                     field.notes.clear()
                                 }
                                 grid = currentGrid.copy()
-                                // Spielstand speichern (jetzt inkl. Notizen)
+                                // Aktuellen Spielstand speichern inkl. Notizen und pro Schwirigkeitslevel
                                 viewModel.saveGameState(
                                     currentGridString = currentGrid.toVisualString(),
                                     notesGridString = currentGrid.notesToString(),
+                                    difficulty = difficulty
                                 )
                             }
                         }
@@ -232,6 +232,7 @@ fun GameScreen(
                         viewModel.saveGameState(
                             currentGridString = currentGrid.toVisualString(),
                             notesGridString = currentGrid.notesToString(),
+                            difficulty = difficulty
                         )
                     }
                 }
@@ -262,11 +263,11 @@ fun GameScreen(
             // Zurück-Button für Undo
             // Zurück-Button für Undo
             ActionButton("Zurück") {
-                viewModel.undoLastMove { restoredGrid, restoredNotes ->
+                viewModel.undoLastMove(difficulty) { restoredGrid, restoredNotes ->
                     grid?.let {
                         it.updateGridFromVisualString(restoredGrid)
                         it.generateNotesFromString(restoredNotes)
-                        grid = it.copy() // <--- Neu: löst Recompose aus
+                        grid = it.copy() // löst Recompose aus
                     }
                 }
             }
@@ -274,20 +275,6 @@ fun GameScreen(
 
         }
     }
-
-@Composable
-fun StatBox(label: String, value: String) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .width(120.dp)
-            .border(1.dp, Color.Gray, shape = RoundedCornerShape(8.dp))
-            .padding(8.dp)
-    ) {
-        Text(text = label, fontSize = 14.sp, color = Color.Gray)
-        Text(text = value, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-    }
-}
 
 @Composable
 fun SudokuCell(

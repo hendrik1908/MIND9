@@ -2,6 +2,7 @@ package com.example.num8rix.database.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.example.num8rix.DifficultyLevel
 
 @Entity(tableName = "game_cache")
 data class GameCache(
@@ -10,5 +11,6 @@ data class GameCache(
 
     val currentGridString: String, // Speichert den aktuellen Spielstand
     val notesGridString: String, // Speichert die Notizen
-    val originalGridString: String // Speichert Vorgegebene Zahlen des Algotithmus
+    val originalGridString: String, // Speichert Vorgegebene Zahlen des Algotithmus
+    val difficulty: DifficultyLevel // Speichert die Schwirigkietsstufe ab
 )

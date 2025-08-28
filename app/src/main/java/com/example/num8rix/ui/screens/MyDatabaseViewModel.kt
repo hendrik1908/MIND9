@@ -89,32 +89,40 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
     fun saveGameState(
         currentGridString: String,
         notesGridString: String,
+        difficulty: DifficultyLevel,
         originalGridString: String? = null
     ) {
         viewModelScope.launch {
-            // Wenn originalGridString mitgegeben wird, nehmen wir das
-            // Sonst nehmen wir das aus dem letzten Eintrag (bleibt gleich)
+            //originalGridString wird nur gesetzt, wenn noch kein Spiel für diese Schwierigkeit existiert.
             val original = originalGridString ?: run {
-                val existing = gameCacheDao.getLatestEntry()
+                // Wenn wir schon einen Spielstand für diese Schwierigkeit haben, den Originalstring NICHT überschreiben
+                val existing = gameCacheDao.getLatestEntryByDifficulty(difficulty)
                 existing?.originalGridString ?: currentGridString
             }
 
             val gameState = GameCache(
                 currentGridString = currentGridString,
                 notesGridString = notesGridString,
-                originalGridString = original
+                originalGridString = original,
+                difficulty = difficulty
             )
-            gameCacheDao.insert(gameState) // Ihre bestehende Methode verwenden
+            gameCacheDao.insert(gameState)
         }
     }
 
     /**
      * Löscht den letzten gespeicherten Spielstand, um die UNDO-Funktion zu realisieren.
      */
-    fun undoLastMove(onGridRestored: (String, String) -> Unit) {
+    fun undoLastMove(
+        difficulty: DifficultyLevel,
+        onGridRestored: (String, String) -> Unit
+    ) {
         viewModelScope.launch {
-            gameCacheDao.deleteLatestEntry()
-            val latest = gameCacheDao.getLatestEntry()
+            // Lösche den letzten Spielstand nur für diese Schwierigkeit
+            gameCacheDao.deleteLatestEntryByDifficulty(difficulty)
+
+            // Lade den neuen letzten Spielstand der gleichen Schwierigkeit
+            val latest = gameCacheDao.getLatestEntryByDifficulty(difficulty)
             latest?.let {
                 onGridRestored(it.currentGridString, it.notesGridString)
             }
@@ -134,9 +142,9 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
     /**
      * Ruft den neuesten Spielstand aus dem Cache ab, um ein Spiel fortzusetzen.
      */
-    fun getLatestGameStateAsGrid(onResult: (Grid?) -> Unit) {
+    fun getLatestGameStateAsGrid(difficulty: DifficultyLevel, onResult: (Grid?) -> Unit) {
         viewModelScope.launch {
-            val latestState = gameCacheDao.getLatestEntry()
+            val latestState = gameCacheDao.getLatestEntryByDifficulty(difficulty)
             if (latestState != null) {
                 val grid = Grid()
 
