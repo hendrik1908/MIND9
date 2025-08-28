@@ -32,29 +32,18 @@ fun StartScreen(
             .background(Color(0xFFF5F5F5))
     ) {
         // Header
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(top = 64.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Spacer(modifier = Modifier.width(24.dp)) // Platzhalter für Symmetrie
-
             Text(
                 text = "MIND9",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
-
-            IconButton(onClick = onSettingsClick) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Einstellungen",
-                    tint = Color.Black
-                )
-            }
         }
 
         // Hauptinhalt

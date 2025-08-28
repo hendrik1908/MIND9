@@ -92,7 +92,10 @@ fun GameScreen(
         // Top Bar mit Zurück-Button und Titel
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 24.dp)
+
         ) {
             IconButton(onClick = onBackClick) {
                 Icon(
@@ -110,7 +113,7 @@ fun GameScreen(
             Spacer(modifier = Modifier.width(48.dp)) // Platzhalter rechts
         }
 
-        Spacer(modifier = Modifier.height(25.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
         // Zeit + Züge Anzeige
 
@@ -191,7 +194,14 @@ fun GameScreen(
                         }
                     },
                     modifier = Modifier.size(36.dp),
-                    contentPadding = PaddingValues(0.dp)
+                    contentPadding = PaddingValues(0.dp),
+                    colors = if (isNoteMode) {  //dynamische Farbe grau bei aktiven Notizmodus
+                        ButtonDefaults.buttonColors(
+                            containerColor = Color.LightGray,
+                        )
+                    } else {
+                        ButtonDefaults.buttonColors() // Standard-Theme-Farben UI5
+                    },
                 ) {
                     Text(i.toString())
                 }
