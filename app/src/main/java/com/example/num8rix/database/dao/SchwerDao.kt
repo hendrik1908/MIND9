@@ -29,4 +29,7 @@ interface SchwerDao {
     // NEU: Zählt alle Rätsel dieser Schwierigkeit
     @Query("SELECT COUNT(*) FROM schwer")
     suspend fun getTotalCount(): Int
+
+    @Query("SELECT COUNT(*) FROM schwer WHERE alreadySolved = 1")
+    suspend fun getSolvedCount(): Int
 }

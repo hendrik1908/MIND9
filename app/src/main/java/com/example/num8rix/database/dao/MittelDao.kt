@@ -30,4 +30,6 @@ interface MittelDao {
     // NEU: Zählt alle Rätsel dieser Schwierigkeit
     @Query("SELECT COUNT(*) FROM mittel")
     suspend fun getTotalCount(): Int
+    @Query("SELECT COUNT(*) FROM mittel WHERE alreadySolved = 1")
+    suspend fun getSolvedCount(): Int
 }

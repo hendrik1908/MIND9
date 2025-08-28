@@ -6,26 +6,40 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.num8rix.DifficultyLevel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 
 @Composable
 fun StartScreen(
+    viewModel: MyDatabaseViewModel,
     onInfoClick: () -> Unit = {},
-    onSettingsClick: () -> Unit = {},
     onGameStart: (DifficultyLevel) -> Unit = {},
-    onGeneratorClick: () -> Unit = {} // NEU: Callback für Generator-Screen
-) {
+    onGeneratorClick: () -> Unit = {} //Callback für Generator-Screen
+){
+    var easyCounts by remember { mutableStateOf(Pair(0, 0)) }
+    var mediumCounts by remember { mutableStateOf(Pair(0, 0)) }
+    var hardCounts by remember { mutableStateOf(Pair(0, 0)) }
+
+    LaunchedEffect(Unit) {
+        viewModel.getSolvedAndTotalCounts { easy, medium, hard ->
+            easyCounts = easy
+            mediumCounts = medium
+            hardCounts = hard
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -74,6 +88,7 @@ fun StartScreen(
             // Schwierigkeitsgrad Buttons
             DifficultyButton(
                 text = "Einfach",
+                progressText = "${easyCounts.first}/${easyCounts.second}",
                 isPrimary = true,
                 onClick = { onGameStart(DifficultyLevel.EASY) }
             )
@@ -82,6 +97,7 @@ fun StartScreen(
 
             DifficultyButton(
                 text = "Mittel",
+                progressText = "${mediumCounts.first}/${mediumCounts.second}",
                 isPrimary = false,
                 onClick = { onGameStart(DifficultyLevel.MEDIUM) }
             )
@@ -90,31 +106,20 @@ fun StartScreen(
 
             DifficultyButton(
                 text = "Schwer",
+                progressText = "${hardCounts.first}/${hardCounts.second}",
                 isPrimary = false,
                 onClick = { onGameStart(DifficultyLevel.HARD) }
             )
 
             // NEU: Generator Button
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
-            Button(
+            DifficultyButton(
+                text = "Rätsel Generieren",
+                isPrimary = false, // sekundärer Stil, Farbe setzen wir manuell
                 onClick = onGeneratorClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF2196F3), // Blauer Akzent für Generator
-                    contentColor = Color.White
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
-            ) {
-                Text(
-                    text = "Rätsel Generieren",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+                widthFraction = 0.7f, // <--- etwas schmaler als die anderen Buttons
+            )
         }
 
         // Bottom Navigation (nur Home und Info)
@@ -148,29 +153,43 @@ fun StartScreen(
 fun DifficultyButton(
     text: String,
     isPrimary: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    widthFraction: Float = 1f,
+    containerColor: Color? = null,
+    contentColor: Color? = null,
+    progressText: String? = null
 ) {
     Button(
         onClick = onClick,
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxWidth(widthFraction)
             .height(56.dp),
         shape = RoundedCornerShape(28.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isPrimary) Color.Black else Color(0xFFEEEEEE),
-            contentColor = if (isPrimary) Color.White else Color.Black
+            containerColor = containerColor ?: if (isPrimary) Color.Black else Color(0xFFEEEEEE),
+            contentColor = contentColor ?: if (isPrimary) Color.White else Color.Black
         ),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
     ) {
-        Text(
-            text = text,
-            fontSize = 18.sp
-        )
-    }
-}
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            // Zentrierter Button-Text
+            Text(
+                text = text,
+                fontSize = 18.sp
+            )
 
-@Preview(showBackground = true)
-@Composable
-fun StartScreenPreview() {
-    StartScreen()
+            // Fortschritt rechts
+            if (progressText != null) {
+                Text(
+                    text = progressText,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                )
+            }
+        }
+    }
 }

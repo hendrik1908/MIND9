@@ -65,8 +65,8 @@ fun Num8rixApp() {
 
     when (currentScreen) {
         "start" -> StartScreen(
+            viewModel = databaseViewModel,
             onInfoClick = { currentScreen = "info" },
-            onSettingsClick = { /* optional */ },
             onGameStart = { difficulty ->
                 selectedDifficulty = difficulty
                 // Lade einen zufälligen unsolvedString aus der Datenbank

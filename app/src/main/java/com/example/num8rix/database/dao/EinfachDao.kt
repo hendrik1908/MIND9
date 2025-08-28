@@ -27,11 +27,14 @@ interface EinfachDao {
     @Query("SELECT * FROM einfach WHERE alreadySolved = 0 ORDER BY RANDOM() LIMIT 1")
     suspend fun getRandomUnsolved(): Einfach?
 
-    // NEU: Duplikatsprüfung für die Generierung
+    //Duplikatsprüfung für die Generierung
     @Query("SELECT COUNT(*) > 0 FROM einfach WHERE unsolvedString = :unsolvedString")
     suspend fun puzzleExists(unsolvedString: String): Boolean
 
-    // NEU: Zählt alle Rätsel dieser Schwierigkeit
+    //Zählt alle Rätsel dieser Schwierigkeit
     @Query("SELECT COUNT(*) FROM einfach")
     suspend fun getTotalCount(): Int
+
+    @Query("SELECT COUNT(*) FROM einfach WHERE alreadySolved = 1")
+    suspend fun getSolvedCount(): Int
 }

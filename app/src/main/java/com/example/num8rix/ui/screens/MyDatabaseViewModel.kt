@@ -16,6 +16,8 @@ import kotlinx.coroutines.launch
 import com.example.num8rix.Str8tsGridSerializer // <- Den Import für deine Serializer-Klasse hinzufügen!
 import com.example.num8rix.DifficultyLevel // <- Import für das DifficultyLevel Enum
 import com.example.num8rix.Grid
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 
 
@@ -169,6 +171,27 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
             val mediumCount = mittelDao.getTotalCount()
             val hardCount = schwerDao.getTotalCount()
             onResult(easyCount, mediumCount, hardCount)
+        }
+    }
+// gibt gelöste vs. ungelöste Rätsel pro Difficulty zurückgibt für StartScreen
+    fun getSolvedAndTotalCounts(onResult: (easy: Pair<Int, Int>, medium: Pair<Int, Int>, hard: Pair<Int, Int>) -> Unit) {
+        viewModelScope.launch {
+            val easySolved = einfachDao.getSolvedCount()
+            val easyTotal = einfachDao.getTotalCount()
+
+            val mediumSolved = mittelDao.getSolvedCount()
+            val mediumTotal = mittelDao.getTotalCount()
+
+            val hardSolved = schwerDao.getSolvedCount()
+            val hardTotal = schwerDao.getTotalCount()
+
+            withContext(Dispatchers.Main) {
+                onResult(
+                    Pair(easyTotal - easySolved, easyTotal), // ungelöst/gesamt
+                    Pair(mediumTotal - mediumSolved, mediumTotal),
+                    Pair(hardTotal - hardSolved, hardTotal)
+                )
+            }
         }
     }
 
