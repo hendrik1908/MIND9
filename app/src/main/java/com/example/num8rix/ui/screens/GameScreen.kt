@@ -30,6 +30,7 @@ fun GameScreen(
     var selectedCell by remember { mutableStateOf<Pair<Int, Int>?>(null)}
     var isNoteMode by remember { mutableStateOf(false) }
     var grid by remember { mutableStateOf<Grid?>(null) }
+    var incorrectCells by remember { mutableStateOf(setOf<Pair<Int, Int>>()) }
 
 
     // Ruft die Datenbank nur einmal beim ersten Composable-Aufbau auf, Game wird asynchron aufgebaut
@@ -137,11 +138,13 @@ fun GameScreen(
                                 isBlack = field.isBlack(),
                                 isSelected = isSelected,
                                 notes = field.notes,
-                                isInitial = field.isInitial, // NEU hinzugefügt
+                                isInitial = field.isInitial,
+                                isIncorrect = incorrectCells.contains(row to col),
                                 //Nur weiße & nicht-initiale Felder dürfen ausgewählt werden
                                 onClick = {
                                     if (!field.isBlack() && !field.isInitial) {
                                         selectedCell = row to col
+                                        incorrectCells = emptySet()
                                     }
                                 },
                                 modifier = Modifier.weight(1f)
@@ -184,6 +187,8 @@ fun GameScreen(
                                     field.notes.clear()
                                 }
                                 grid = currentGrid.copy()
+                                //falsche Markierungen zurücksetzen
+                                incorrectCells = emptySet()
                                 // Aktuellen Spielstand speichern inkl. Notizen und pro Schwirigkeitslevel
                                 viewModel.saveGameState(
                                     currentGridString = currentGrid.toVisualString(),
@@ -258,7 +263,11 @@ fun GameScreen(
                 )
             }
             ActionButton("Hinweis") { /* unverändert */ }
-            ActionButton("Prüfen") { /* unverändert */ }
+            ActionButton("Prüfen") {
+                viewModel.checkCurrentGrid(difficulty, currentGrid) { incorrect ->
+                    incorrectCells = incorrect
+                }
+            }
             ActionButton("Lösen") { /* unverändert */ }
             // Zurück-Button für Undo
             // Zurück-Button für Undo
@@ -284,7 +293,8 @@ fun SudokuCell(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     notes: Set<Int> = emptySet(),
-    isInitial: Boolean = false // NEU hinzugefügt
+    isInitial: Boolean = false,
+    isIncorrect: Boolean = false
 ) {
     Box(
         contentAlignment = Alignment.Center,
@@ -306,7 +316,13 @@ fun SudokuCell(
                     text = value,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
-                    color = if (isInitial) Color.Black else Color.Blue // Schwarz für initiale, Blau für Spieler-Zahlen
+                    // Schwarz für initiale, Blau für Spieler-Zahlen, Rot für falsche bei Prüfung
+                    color = when {
+                        isInitial -> Color.Black
+                        isIncorrect -> Color.Red
+                        else -> Color.Blue
+                    }
+
                 )
             }
             notes.isNotEmpty() -> { // Notizen im 3x3 Grid

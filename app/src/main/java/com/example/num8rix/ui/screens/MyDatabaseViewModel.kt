@@ -195,6 +195,38 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
+    fun checkCurrentGrid(
+        difficulty: DifficultyLevel,
+        currentGrid: Grid,
+        onResult: (Set<Pair<Int, Int>>) -> Unit
+    ) {
+        viewModelScope.launch {
+            val solutionString = when (difficulty) {
+                DifficultyLevel.EASY -> einfachDao.getRandomUnsolved()?.solutionString
+                DifficultyLevel.MEDIUM -> mittelDao.getRandomUnsolved()?.solutionString
+                DifficultyLevel.HARD -> schwerDao.getRandomUnsolved()?.solutionString
+            }
+
+            if (solutionString != null) {
+                val solutionGrid = Grid()
+                solutionGrid.generateGridFromFlatString(solutionString)
+
+                val incorrect = mutableSetOf<Pair<Int, Int>>()
+                for (row in 0 until 9) {
+                    for (col in 0 until 9) {
+                        val userVal = currentGrid.getField(row, col).value
+                        val solVal = solutionGrid.getField(row, col).value
+
+                        if (userVal != 0 && userVal != solVal) {
+                            incorrect.add(row to col)
+                        }
+                    }
+                }
+                onResult(incorrect)
+            }
+        }
+    }
+
     // Nur zum Testen des Screens, damit Eintrag in DB vorhanden ist. Kann bei funktionierendem Algorithmus entfernt werden
     fun addEinfachEntry(
         unsolved: String,

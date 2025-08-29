@@ -143,6 +143,16 @@ class Grid (){
         }
     }
 
+    fun generateGridFromFlatString(flat: String) {
+        if (flat.length != 81) throw IllegalArgumentException("Solution string must have 81 characters")
+        for (i in flat.indices) {
+            val row = i / 9
+            val col = i % 9
+            val value = flat[i].toString().toInt()
+            this.getField(row, col).value = value
+        }
+    }
+
 
     fun printGrid() {
         for (row in 0 until 9) {
