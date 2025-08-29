@@ -195,10 +195,10 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
-    fun checkCurrentGrid(
+    fun checkCurrentGridWithHighlights(
         difficulty: DifficultyLevel,
         currentGrid: Grid,
-        onResult: (Set<Pair<Int, Int>>) -> Unit
+        onResult: (correct: Set<Pair<Int, Int>>, incorrect: Set<Pair<Int, Int>>) -> Unit
     ) {
         viewModelScope.launch {
             val solutionString = when (difficulty) {
@@ -211,18 +211,22 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
                 val solutionGrid = Grid()
                 solutionGrid.generateGridFromFlatString(solutionString)
 
+                val correct = mutableSetOf<Pair<Int, Int>>()
                 val incorrect = mutableSetOf<Pair<Int, Int>>()
+
                 for (row in 0 until 9) {
                     for (col in 0 until 9) {
                         val userVal = currentGrid.getField(row, col).value
                         val solVal = solutionGrid.getField(row, col).value
 
-                        if (userVal != 0 && userVal != solVal) {
-                            incorrect.add(row to col)
+                        if (userVal != 0) {
+                            if (userVal == solVal) correct.add(row to col)
+                            else incorrect.add(row to col)
                         }
                     }
                 }
-                onResult(incorrect)
+
+                onResult(correct, incorrect)
             }
         }
     }

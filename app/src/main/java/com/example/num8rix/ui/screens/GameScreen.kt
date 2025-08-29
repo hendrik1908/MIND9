@@ -1,18 +1,48 @@
 package com.example.num8rix.ui.screens
 
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.num8rix.DifficultyLevel
 import com.example.num8rix.Game
 import com.example.num8rix.Grid
@@ -31,6 +61,7 @@ fun GameScreen(
     var isNoteMode by remember { mutableStateOf(false) }
     var grid by remember { mutableStateOf<Grid?>(null) }
     var incorrectCells by remember { mutableStateOf(setOf<Pair<Int, Int>>()) }
+    var correctCells by remember { mutableStateOf(setOf<Pair<Int, Int>>()) }
 
 
     // Ruft die Datenbank nur einmal beim ersten Composable-Aufbau auf, Game wird asynchron aufgebaut
@@ -140,11 +171,13 @@ fun GameScreen(
                                 notes = field.notes,
                                 isInitial = field.isInitial,
                                 isIncorrect = incorrectCells.contains(row to col),
+                                isCorrect = correctCells.contains(row to col),
                                 //Nur weiße & nicht-initiale Felder dürfen ausgewählt werden
                                 onClick = {
                                     if (!field.isBlack() && !field.isInitial) {
                                         selectedCell = row to col
                                         incorrectCells = emptySet()
+                                        correctCells = emptySet()
                                     }
                                 },
                                 modifier = Modifier.weight(1f)
@@ -264,7 +297,8 @@ fun GameScreen(
             }
             ActionButton("Hinweis") { /* unverändert */ }
             ActionButton("Prüfen") {
-                viewModel.checkCurrentGrid(difficulty, currentGrid) { incorrect ->
+                viewModel.checkCurrentGridWithHighlights(difficulty, currentGrid) { correct, incorrect ->
+                    correctCells = correct
                     incorrectCells = incorrect
                 }
             }
@@ -294,7 +328,8 @@ fun SudokuCell(
     modifier: Modifier = Modifier,
     notes: Set<Int> = emptySet(),
     isInitial: Boolean = false,
-    isIncorrect: Boolean = false
+    isIncorrect: Boolean = false,
+    isCorrect: Boolean = false
 ) {
     Box(
         contentAlignment = Alignment.Center,
@@ -320,6 +355,7 @@ fun SudokuCell(
                     color = when {
                         isInitial -> Color.Black
                         isIncorrect -> Color.Red
+                        isCorrect -> Color.Green
                         else -> Color.Blue
                     }
 
