@@ -3,6 +3,7 @@ package com.example.num8rix
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -62,6 +63,20 @@ fun Num8rixApp() {
 
     // ViewModel
     val databaseViewModel: MyDatabaseViewModel = viewModel()
+
+    // Back Button Handler - navigiert zwischen Screens statt App zu schließen
+    BackHandler(enabled = currentScreen != "start") {
+        when (currentScreen) {
+            "info" -> currentScreen = "start"
+            "generator" -> currentScreen = "start" 
+            "game" -> {
+                // Bei Game Screen zurück zum Start und States zurücksetzen
+                currentScreen = "start"
+                selectedDifficulty = null
+                unsolvedString = null
+            }
+        }
+    }
 
     when (currentScreen) {
         "start" -> StartScreen(
