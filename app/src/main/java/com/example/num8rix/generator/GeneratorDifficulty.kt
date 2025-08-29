@@ -10,5 +10,5 @@ enum class GeneratorDifficulty(
     EASY(4..12, true, 0.4, 20, "Große Kompartments, viele Hinweise"),
     MEDIUM(13..25, true, 0.3, 15, "Mittlere Kompartments, moderate Hinweise"),
     HARD(26..38, true, 0.2, 10, "Kleine Kompartments, wenige Hinweise"),
-    EXPERT(39..48, false, 0.1, 8, "Sehr kleine Kompartments, minimale Hinweise")
+    EXPERT(10..22, false, 0.1, 8, "Sehr kleine Kompartments, minimale Hinweise")
 }
