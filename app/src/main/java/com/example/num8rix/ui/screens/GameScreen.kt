@@ -35,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import com.example.num8rix.DifficultyLevel
 import com.example.num8rix.Game
 import com.example.num8rix.Grid
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -72,20 +74,22 @@ fun GameScreen(
                 game = Game.fromGrid(cachedGrid)
                 isLoading = false
             } else {
-                viewModel.getRandomUnsolvedByDifficulty(difficulty) { unsolvedString ->
-                    if (unsolvedString != null) {
-                        val newGame = Game(unsolvedString).apply { generateGame() }
+                viewModel.getRandomUnsolvedByDifficulty(difficulty) { entry ->
+                    if (entry != null) {
+                        val newGame = Game(entry.unsolvedString).apply { generateGame() }
                         grid = newGame.grid
                         game = newGame
+                        isLoading = false
 
-                        // EINMALIG: Erstes Speichern mit Original
+                        // EINMALIG: Erstes Speichern inkl. puzzleId
                         viewModel.saveGameState(
                             currentGridString = newGame.grid.toVisualString(),
                             notesGridString = newGame.grid.notesToString(),
-                            difficulty = difficulty
+                            difficulty = difficulty,
+                            originalGridString = newGame.grid.toVisualString(),
+                            puzzleId = entry.id   // <-- WICHTIG: puzzleId speichern
                         )
                     }
-                    isLoading = false
                 }
             }
         }
@@ -191,6 +195,7 @@ fun GameScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Zahlenfeld 1-9
+        val coroutineScope = rememberCoroutineScope()
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -223,11 +228,17 @@ fun GameScreen(
                                 //falsche Markierungen zurücksetzen
                                 incorrectCells = emptySet()
                                 // Aktuellen Spielstand speichern inkl. Notizen und pro Schwirigkeitslevel
-                                viewModel.saveGameState(
-                                    currentGridString = currentGrid.toVisualString(),
-                                    notesGridString = currentGrid.notesToString(),
-                                    difficulty = difficulty
-                                )
+                                coroutineScope.launch {
+                                    val latest = viewModel.getLatestCacheEntry(difficulty)
+                                    latest?.let { cache ->
+                                        viewModel.saveGameState(
+                                            currentGridString = currentGrid.toVisualString(),
+                                            notesGridString = currentGrid.notesToString(),
+                                            difficulty = difficulty,
+                                            puzzleId = cache.puzzleId
+                                        )
+                                    }
+                                }
                             }
                         }
                     },
@@ -263,15 +274,21 @@ fun GameScreen(
                 selectedCell?.let { (row, col) ->
                     val field = currentGrid.getField(row, col)
                     if (!field.isBlack() && !field.isInitial) {
-                        field.value = 0 //Zahl löschen
+                        field.value = 0 // Zahl löschen
                         field.notes.clear()
                         grid = currentGrid.copy()
-                        //Spielstand in GameCache speichern nach löschen
-                        viewModel.saveGameState(
-                            currentGridString = currentGrid.toVisualString(),
-                            notesGridString = currentGrid.notesToString(),
-                            difficulty = difficulty
-                        )
+                        // Spielstand in GameCache speichern nach Löschen
+                        coroutineScope.launch {
+                            val latest = viewModel.getLatestCacheEntry(difficulty)
+                            latest?.let { cache ->
+                                viewModel.saveGameState(
+                                    currentGridString = currentGrid.toVisualString(),
+                                    notesGridString = currentGrid.notesToString(),
+                                    difficulty = difficulty,
+                                    puzzleId = cache.puzzleId
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -297,9 +314,18 @@ fun GameScreen(
             }
             ActionButton("Hinweis") { /* unverändert */ }
             ActionButton("Prüfen") {
-                viewModel.checkCurrentGridWithHighlights(difficulty, currentGrid) { correct, incorrect ->
-                    correctCells = correct
-                    incorrectCells = incorrect
+                coroutineScope.launch {
+                    val latest = viewModel.getLatestCacheEntry(difficulty)
+                    latest?.let { cache ->
+                        viewModel.checkCurrentGridWithHighlights(
+                            difficulty,
+                            currentGrid,
+                            cache.puzzleId
+                        ) { correct, incorrect ->
+                            correctCells = correct
+                            incorrectCells = incorrect
+                        }
+                    }
                 }
             }
             ActionButton("Lösen") { /* unverändert */ }

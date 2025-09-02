@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import com.example.num8rix.Str8tsGridSerializer // <- Den Import für deine Serializer-Klasse hinzufügen!
 import com.example.num8rix.DifficultyLevel // <- Import für das DifficultyLevel Enum
 import com.example.num8rix.Grid
+import com.example.num8rix.database.entity.PuzzleEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -72,16 +73,20 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
     //Gibt je nach Schwirigkeit ein zufällig gelöstes Rätsel zurück
     open fun getRandomUnsolvedByDifficulty(
         difficulty: DifficultyLevel,
-        onResult: (String?) -> Unit
+        onResult: (PuzzleEntity?) -> Unit
     ) {
         viewModelScope.launch {
             val result = when (difficulty) {
-                DifficultyLevel.EASY -> einfachDao.getRandomUnsolved()?.unsolvedString
-                DifficultyLevel.MEDIUM -> mittelDao.getRandomUnsolved()?.unsolvedString
-                DifficultyLevel.HARD -> schwerDao.getRandomUnsolved()?.unsolvedString
+                DifficultyLevel.EASY -> einfachDao.getRandomUnsolved()
+                DifficultyLevel.MEDIUM -> mittelDao.getRandomUnsolved()
+                DifficultyLevel.HARD -> schwerDao.getRandomUnsolved()
             }
             onResult(result)
         }
+    }
+
+    suspend fun getLatestCacheEntry(difficulty: DifficultyLevel): GameCache? {
+        return gameCacheDao.getLatestEntryByDifficulty(difficulty)
     }
 
     /**
@@ -92,7 +97,8 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
         currentGridString: String,
         notesGridString: String,
         difficulty: DifficultyLevel,
-        originalGridString: String? = null
+        originalGridString: String? = null,
+        puzzleId: Int,
     ) {
         viewModelScope.launch {
             //originalGridString wird nur gesetzt, wenn noch kein Spiel für diese Schwierigkeit existiert.
@@ -106,7 +112,8 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
                 currentGridString = currentGridString,
                 notesGridString = notesGridString,
                 originalGridString = original,
-                difficulty = difficulty
+                difficulty = difficulty,
+                puzzleId = puzzleId
             )
             gameCacheDao.insert(gameState)
         }
@@ -198,13 +205,14 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
     fun checkCurrentGridWithHighlights(
         difficulty: DifficultyLevel,
         currentGrid: Grid,
+        puzzleId: Int,
         onResult: (correct: Set<Pair<Int, Int>>, incorrect: Set<Pair<Int, Int>>) -> Unit
     ) {
         viewModelScope.launch {
             val solutionString = when (difficulty) {
-                DifficultyLevel.EASY -> einfachDao.getRandomUnsolved()?.solutionString
-                DifficultyLevel.MEDIUM -> mittelDao.getRandomUnsolved()?.solutionString
-                DifficultyLevel.HARD -> schwerDao.getRandomUnsolved()?.solutionString
+                DifficultyLevel.EASY -> einfachDao.getSolutionStringById(puzzleId)
+                DifficultyLevel.MEDIUM -> mittelDao.getSolutionStringById(puzzleId)
+                DifficultyLevel.HARD -> schwerDao.getSolutionStringById(puzzleId)
             }
 
             if (solutionString != null) {

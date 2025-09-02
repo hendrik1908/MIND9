@@ -5,8 +5,8 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "einfach")
 data class Einfach(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val unsolvedString: String,
-    val solutionString: String,
-    val alreadySolved: Boolean
-)
+    @PrimaryKey(autoGenerate = true) override val id: Int = 0,
+    override val unsolvedString: String,
+    override val solutionString: String,
+    override val alreadySolved: Boolean
+) : PuzzleEntity

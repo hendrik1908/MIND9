@@ -37,4 +37,7 @@ interface EinfachDao {
 
     @Query("SELECT COUNT(*) FROM einfach WHERE alreadySolved = 1")
     suspend fun getSolvedCount(): Int
+
+    @Query("SELECT * FROM einfach WHERE id = :itemId LIMIT 1")
+    suspend fun getById(itemId: Int): Einfach?
 }

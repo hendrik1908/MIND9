@@ -60,6 +60,7 @@ fun Num8rixApp() {
     var currentScreen by remember { mutableStateOf("start") }
     var selectedDifficulty by remember { mutableStateOf<DifficultyLevel?>(null) }
     var unsolvedString by remember { mutableStateOf<String?>(null) }
+    var currentPuzzleId by remember { mutableStateOf<Int?>(null) }
 
     // ViewModel
     val databaseViewModel: MyDatabaseViewModel = viewModel()
@@ -86,8 +87,11 @@ fun Num8rixApp() {
                 selectedDifficulty = difficulty
                 // Lade einen zufälligen unsolvedString aus der Datenbank
                 databaseViewModel.getRandomUnsolvedByDifficulty(difficulty) { result ->
-                    unsolvedString = result
-                    currentScreen = "game"
+                    if (result != null) {
+                        unsolvedString = result.unsolvedString
+                        currentPuzzleId = result.id
+                        currentScreen = "game"
+                    }
                 }
             },
             onGeneratorClick = { currentScreen = "generator" } // NEU: Navigation zum Generator
@@ -120,6 +124,7 @@ fun Num8rixApp() {
                         currentScreen = "start"
                         selectedDifficulty = null
                         unsolvedString = null
+                        currentPuzzleId = null
                     }
                 )
             } else {
