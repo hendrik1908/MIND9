@@ -21,6 +21,9 @@ import com.example.num8rix.DifficultyLevel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.example.num8rix.R
 
 @Composable
 fun StartScreen(
@@ -57,6 +60,23 @@ fun StartScreen(
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
+            )
+        }
+
+        // APP LOGO
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(top = 0.dp, bottom = 0.dp), // Abstand zum Text oben und unten
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.mind9_full_logo),
+                contentDescription = "App Logo",
+                modifier = Modifier
+                    .size(200.dp) // Größe
             )
         }
 
