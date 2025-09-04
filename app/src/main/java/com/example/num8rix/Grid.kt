@@ -28,7 +28,11 @@ class Grid (){
         for (row in 0 until 9) {
             for (col in 0 until 9) {
                 val originalField = this.getField(row, col)
-                val newField = Field(originalField.color, originalField.isInitial).apply {
+                val newField = Field(
+                    color = originalField.color, 
+                    isInitial = originalField.isInitial,
+                    blackCellValue = originalField.blackCellValue
+                ).apply {
                     value = originalField.value
                     notes.clear()
                     notes.addAll(originalField.notes)
@@ -56,6 +60,20 @@ class Grid (){
                     f.isBlack() -> BLACK_CELL.toString()
                     f.value == 0 -> EMPTY_WHITE.toString()
                     else -> f.value.toString()
+                }
+            }
+        }
+    }
+
+    fun toLayoutString(): String {
+        return (0 until GRID_SIZE).joinToString(";") { row ->
+            (0 until GRID_SIZE).joinToString("") { col ->
+                val f = getField(row, col)
+                when {
+                    f.isWhite() -> EMPTY_WHITE.toString()
+                    f.hasBlackCellHint() -> f.blackCellValue.toString()
+                    f.isBlack() -> "0" // Schwarze Zelle ohne Hinweis
+                    else -> EMPTY_WHITE.toString()
                 }
             }
         }
@@ -143,6 +161,70 @@ class Grid (){
         }
     }
 
+    fun generateGridFromVisualAndLayout(visualString: String, layoutString: String = "") {
+        val rows = visualString.split(";")
+        if (rows.size != 9) throw IllegalArgumentException("Grid must have 9 rows")
+
+        for (row in 0 until 9) {
+            val line = rows[row]
+            if (line.length != 9) throw IllegalArgumentException("Each row must have 9 characters")
+
+            for (col in 0 until 9) {
+                val char = line[col]
+                val field: Field = when {
+                    char in '1'..'9' -> Field(FieldColor.WHITE, isInitial = true).apply { value = char.digitToInt() }
+                    char == '·' -> Field(FieldColor.WHITE, isInitial = false) // leeres Feld
+                    char == '█' -> Field(FieldColor.BLACK, isInitial = true) // wird durch Layout überschrieben
+                    else -> throw IllegalArgumentException("Invalid character: $char at row $row, col $col")
+                }
+                setField(row, col, field)
+            }
+        }
+        
+        // Layout-Informationen anwenden, falls vorhanden
+        if (layoutString.isNotEmpty()) {
+            applyLayoutString(layoutString)
+        }
+    }
+
+    fun applyLayoutString(layoutString: String) {
+        val rows = layoutString.split(";")
+        if (rows.size != 9) return // Ignore invalid layout strings
+
+        for (row in 0 until 9) {
+            val line = rows[row]
+            if (line.length != 9) continue // Skip invalid rows
+
+            for (col in 0 until 9) {
+                val char = line[col]
+                val field = getField(row, col)
+                
+                when {
+                    char == '·' -> {
+                        // Weiße Zelle - Field bleibt weiß
+                        field.color = FieldColor.WHITE
+                        field.blackCellValue = null
+                    }
+                    char == '0' -> {
+                        // Schwarze Zelle ohne Hinweis
+                        field.color = FieldColor.BLACK
+                        field.blackCellValue = null
+                    }
+                    char in '1'..'9' -> {
+                        // Schwarze Zelle mit Hinweis
+                        field.color = FieldColor.BLACK
+                        field.blackCellValue = char.digitToInt()
+                    }
+                    else -> {
+                        // Unbekanntes Zeichen - als weiß behandeln
+                        field.color = FieldColor.WHITE
+                        field.blackCellValue = null
+                    }
+                }
+            }
+        }
+    }
+
     fun generateGridFromFlatString(flat: String) {
         if (flat.length != 81) throw IllegalArgumentException("Solution string must have 81 characters")
         for (i in flat.indices) {
@@ -160,13 +242,31 @@ class Grid (){
                 val f = getField(row, col)
                 print(
                     when {
-                        f.isBlack() -> "█"
-                        f.value == 0 -> "·"
-                        else -> f.value.toString()
+                        f.hasBlackCellHint() -> f.blackCellValue.toString() // Schwarze Zelle mit Hinweis zeigt die Zahl
+                        f.isBlack() -> "█" // Schwarze Zelle ohne Hinweis
+                        f.value == 0 -> "·" // Leere weiße Zelle
+                        else -> f.value.toString() // Weiße Zelle mit Spielerwert
                     }
                 )
             }
             println()
         }
+    }
+
+    fun debugPrintWithLayout() {
+        println("=== GRID DEBUG ===")
+        for (row in 0 until 9) {
+            for (col in 0 until 9) {
+                val f = getField(row, col)
+                when {
+                    f.hasBlackCellHint() -> print("[${f.blackCellValue}]")
+                    f.isBlack() -> print("[B]")
+                    f.value == 0 -> print(" · ")
+                    else -> print(" ${f.value} ")
+                }
+            }
+            println()
+        }
+        println("=================")
     }
 }

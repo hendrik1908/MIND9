@@ -98,6 +98,7 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
         notesGridString: String,
         difficulty: DifficultyLevel,
         originalGridString: String? = null,
+        originalLayoutString: String = "",
         puzzleId: Int,
     ) {
         viewModelScope.launch {
@@ -108,10 +109,18 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
                 existing?.originalGridString ?: currentGridString
             }
 
+            val layout = if (originalLayoutString.isNotEmpty()) {
+                originalLayoutString
+            } else {
+                val existing = gameCacheDao.getLatestEntryByDifficulty(difficulty)
+                existing?.originalLayoutString ?: ""
+            }
+
             val gameState = GameCache(
                 currentGridString = currentGridString,
                 notesGridString = notesGridString,
                 originalGridString = original,
+                originalLayoutString = layout,
                 difficulty = difficulty,
                 puzzleId = puzzleId
             )
@@ -158,7 +167,7 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
                 val grid = Grid()
 
                 // Erst die ursprünglichen Zahlen laden (alle als initial)
-                grid.generateGridFromVisualString(latestState.originalGridString)
+                grid.generateGridFromVisualAndLayout(latestState.originalGridString, latestState.originalLayoutString)
 
                 // Dann den aktuellen Stand darüber laden (ohne initial zu ändern)
                 grid.updateGridFromVisualString(latestState.currentGridString)
@@ -242,12 +251,14 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
     // Nur zum Testen des Screens, damit Eintrag in DB vorhanden ist. Kann bei funktionierendem Algorithmus entfernt werden
     fun addEinfachEntry(
         unsolved: String,
+        layout: String = "",
         solution: String,
         solved: Boolean
     ) {
         viewModelScope.launch {
             val entry = Einfach(
                 unsolvedString = unsolved,
+                layoutString = layout,
                 solutionString = solution,
                 alreadySolved = solved
             )

@@ -18,7 +18,8 @@ class PuzzleGeneratorService {
 
         return if (puzzleGrid != null) {
             PuzzleResult(
-                unsolved = convertToVisualString(generator.grid, generator.layout),
+                unsolved = generator.getPuzzleVisualString(),
+                layout = generator.getLayoutString(),
                 solution = convertSolutionToFlatString(generator.solution),
                 difficulty = difficulty
             )
@@ -69,6 +70,7 @@ class PuzzleGeneratorService {
  */
 data class PuzzleResult(
     val unsolved: String,
+    val layout: String,
     val solution: String,
     val difficulty: DifficultyLevel
 )

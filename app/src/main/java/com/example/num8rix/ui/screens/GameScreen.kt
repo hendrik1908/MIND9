@@ -75,22 +75,23 @@ fun GameScreen(
                 isLoading = false
             } else {
                 viewModel.getRandomUnsolvedByDifficulty(difficulty) { entry ->
-                    if (entry != null) {
-                        val newGame = Game(entry.unsolvedString).apply { generateGame() }
-                        grid = newGame.grid
-                        game = newGame
-                        isLoading = false
+                if (entry != null) {
+                val newGame = Game(entry.unsolvedString, entry.layoutString).apply { generateGame() }
+                grid = newGame.grid
+                game = newGame
+                isLoading = false
 
-                        // EINMALIG: Erstes Speichern inkl. puzzleId
-                        viewModel.saveGameState(
-                            currentGridString = newGame.grid.toVisualString(),
-                            notesGridString = newGame.grid.notesToString(),
-                            difficulty = difficulty,
-                            originalGridString = newGame.grid.toVisualString(),
-                            puzzleId = entry.id   // <-- WICHTIG: puzzleId speichern
-                        )
+                // EINMALIG: Erstes Speichern inkl. puzzleId
+                viewModel.saveGameState(
+                currentGridString = newGame.grid.toVisualString(),
+                notesGridString = newGame.grid.notesToString(),
+                difficulty = difficulty,
+                originalGridString = newGame.grid.toVisualString(),
+                originalLayoutString = newGame.grid.toLayoutString(),
+                    puzzleId = entry.id   // <-- WICHTIG: puzzleId speichern
+                    )
                     }
-                }
+                        }
             }
         }
     }
@@ -176,6 +177,7 @@ fun GameScreen(
                                 isInitial = field.isInitial,
                                 isIncorrect = incorrectCells.contains(row to col),
                                 isCorrect = correctCells.contains(row to col),
+                                blackCellHint = field.blackCellValue, // NEU: Hinweiszahl übergeben
                                 //Nur weiße & nicht-initiale Felder dürfen ausgewählt werden
                                 onClick = {
                                     if (!field.isBlack() && !field.isInitial) {
@@ -355,7 +357,8 @@ fun SudokuCell(
     notes: Set<Int> = emptySet(),
     isInitial: Boolean = false,
     isIncorrect: Boolean = false,
-    isCorrect: Boolean = false
+    isCorrect: Boolean = false,
+    blackCellHint: Int? = null // NEU: Hinweiszahl für schwarze Felder
 ) {
     Box(
         contentAlignment = Alignment.Center,
@@ -372,6 +375,15 @@ fun SudokuCell(
             .clickable { if (!isBlack) onClick() }
     ) {
         when {
+            isBlack && blackCellHint != null && blackCellHint > 0 -> {
+                // Schwarze Zelle mit Hinweiszahl
+                Text(
+                    text = blackCellHint.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
             value.isNotEmpty() -> { // normale Zahl
                 Text(
                     text = value,

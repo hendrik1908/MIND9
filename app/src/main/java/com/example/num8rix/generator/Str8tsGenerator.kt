@@ -60,6 +60,18 @@ class Str8tsGenerator {
                         solution[r][c] = grid[r][c]
                     }
                 }
+                
+                // DEBUG: Prüfe Lösung für schwarze Felder
+                if (debugMode) {
+                    println("DEBUG: Lösung für schwarze Felder:")
+                    for (r in 0 until 9) {
+                        for (c in 0 until 9) {
+                            if (layout[r][c] == 0) {
+                                println("  Schwarze Zelle ($r, $c): solution = ${solution[r][c]}, grid = ${grid[r][c]}")
+                            }
+                        }
+                    }
+                }
 
                 // SCHRITT 3: Platziere die Hinweise in den schwarzen Feldern.
                 // Diese Funktion muss jetzt die Zahlen aus der 'solution' nehmen.
@@ -88,15 +100,66 @@ class Str8tsGenerator {
                 }
             }
         }
+        
+        if (debugMode) {
+            println("DEBUG: Gefundene schwarze Felder: ${blackCells.size}")
+            println("DEBUG: blackClueRatio: ${currentGeneratorDifficulty.blackClueRatio}")
+        }
+        
         blackCells.shuffle()
 
         val numCluesToPlace = (blackCells.size * currentGeneratorDifficulty.blackClueRatio).toInt()
+        
+        if (debugMode) {
+            println("DEBUG: Soll $numCluesToPlace von ${blackCells.size} schwarzen Feldern Hinweise geben")
+        }
 
         for (i in 0 until numCluesToPlace) {
             val (r, c) = blackCells[i]
-            // Nimm die Zahl für den Hinweis direkt aus der zuvor generierten Lösung!
-            layout[r][c] = solution[r][c]
+            // KORREKTUR: Finde einen sudoku-konformen Wert für das schwarze Feld
+            val clueValue = findValidClueForBlackCell(r, c)
+            if (clueValue != 0) {
+                layout[r][c] = clueValue
+                
+                if (debugMode) {
+                    println("DEBUG: Platziere Hinweis $clueValue bei ($r, $c)")
+                }
+            } else {
+                if (debugMode) {
+                    println("DEBUG: Kein gültiger Hinweis für ($r, $c) gefunden")
+                }
+            }
         }
+        
+        if (debugMode) {
+            println("DEBUG: Hinweise platziert. Layout nach placeBlackCellCluesFromSolution:")
+            for (r in 0 until 9) {
+                for (c in 0 until 9) {
+                    when (layout[r][c]) {
+                        null -> print("·")
+                        0 -> print("0")
+                        else -> print(layout[r][c])
+                    }
+                }
+                println()
+            }
+        }
+    }
+    
+    /**
+     * Findet einen gültigen Hinweis für ein schwarzes Feld basierend auf Sudoku-Regeln
+     */
+    private fun findValidClueForBlackCell(r: Int, c: Int): Int {
+        // Prüfe alle Zahlen 1-9 und finde eine, die sudoku-konform ist
+        val possibleNumbers = (1..9).shuffled()
+        
+        for (num in possibleNumbers) {
+            if (isClueValid(r, c, num)) {
+                return num
+            }
+        }
+        
+        return 0 // Kein gültiger Hinweis gefunden
     }
 
     private fun printLayoutDebug() {
@@ -951,6 +1014,31 @@ class Str8tsGenerator {
                 }
             }
             println()
+        }
+    }
+
+    fun getLayoutString(): String {
+        return (0 until 9).joinToString(";") { row ->
+            (0 until 9).joinToString("") { col ->
+                when (layout[row][col]) {
+                    null -> "·" // Weiße Zelle
+                    0 -> "0" // Schwarze Zelle ohne Hinweis
+                    else -> layout[row][col].toString() // Schwarze Zelle mit Hinweis
+                }
+            }
+        }
+    }
+
+    fun getPuzzleVisualString(): String {
+        return (0 until 9).joinToString(";") { row ->
+            (0 until 9).joinToString("") { col ->
+                when (layout[row][col]) {
+                    null -> {
+                        if (grid[row][col] == 0) "·" else grid[row][col].toString()
+                    }
+                    else -> "█" // Alle schwarzen Felder als █ darstellen
+                }
+            }
         }
     }
 

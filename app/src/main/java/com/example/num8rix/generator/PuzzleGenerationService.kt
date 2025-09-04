@@ -166,6 +166,7 @@ class PuzzleGenerationService : Service() {
                 if (puzzle != null) {
                     val entity = Einfach(
                         unsolvedString = puzzle.unsolved,
+                        layoutString = puzzle.layout,
                         solutionString = puzzle.solution,
                         alreadySolved = false
                     )
@@ -196,6 +197,7 @@ class PuzzleGenerationService : Service() {
                 if (puzzle != null) {
                     val entity = Mittel(
                         unsolvedString = puzzle.unsolved,
+                        layoutString = puzzle.layout,
                         solutionString = puzzle.solution,
                         alreadySolved = false
                     )
@@ -226,6 +228,7 @@ class PuzzleGenerationService : Service() {
                 if (puzzle != null) {
                     val entity = Schwer(
                         unsolvedString = puzzle.unsolved,
+                        layoutString = puzzle.layout,
                         solutionString = puzzle.solution,
                         alreadySolved = false
                     )
@@ -255,7 +258,7 @@ class PuzzleGenerationService : Service() {
         val maxAttempts = 10
 
         repeat(maxAttempts) { attempt ->
-            val puzzle = puzzleGenerator.generateNewPuzzle(difficulty, debug = false)
+            val puzzle = puzzleGenerator.generateNewPuzzle(difficulty, debug = false) // DEBUG AUS!
             if (puzzle != null) {
                 val exists = when (difficulty) {
                     DifficultyLevel.EASY -> database.einfachDao().puzzleExists(puzzle.unsolved)
