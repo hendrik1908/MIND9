@@ -331,27 +331,40 @@ class Str8tsGenerator {
 
     /**
      * Hilfsfunktion, die prüft, ob ein Hinweis in einem schwarzen Feld
-     * mit anderen, bereits gesetzten Hinweisen in Konflikt steht.
+     * mit der bereits generierten Lösung (weiße Felder) und anderen schwarzen Hinweisen kompatibel ist.
      */
     private fun isClueValid(r: Int, c: Int, num: Int): Boolean {
-        // Prüfe die Zeile auf Konflikte mit anderen Hinweisen
+        // Prüfe die Zeile auf Konflikte mit Lösung UND anderen Hinweisen
         for (col in 0 until 9) {
             if (c == col) continue
-            // layout[r][col] ist > 0, wenn dort bereits ein Hinweis steht
-            if (layout[r][col] == num) {
+            
+            val valueInRow = when {
+                layout[r][col] == null -> solution[r][col]  // Weiße Zelle: Prüfe Lösung
+                layout[r][col]!! > 0 -> layout[r][col]!!   // Schwarzer Hinweis
+                else -> 0  // Schwarze Zelle ohne Hinweis
+            }
+            
+            if (valueInRow == num) {
                 return false
             }
         }
 
-        // Prüfe die Spalte auf Konflikte mit anderen Hinweisen
+        // Prüfe die Spalte auf Konflikte mit Lösung UND anderen Hinweisen
         for (row in 0 until 9) {
             if (r == row) continue
-            if (layout[row][c] == num) {
+            
+            val valueInCol = when {
+                layout[row][c] == null -> solution[row][c]  // Weiße Zelle: Prüfe Lösung
+                layout[row][c]!! > 0 -> layout[row][c]!!   // Schwarzer Hinweis
+                else -> 0  // Schwarze Zelle ohne Hinweis
+            }
+            
+            if (valueInCol == num) {
                 return false
             }
         }
 
-        // Kein Konflikt mit anderen Hinweisen gefunden
+        // Kein Konflikt gefunden
         return true
     }
 
@@ -808,8 +821,6 @@ class Str8tsGenerator {
      * @param num Die Zahl, die versuchsweise platziert wird.
      * @return true, wenn der Zug den Str8ts-Regeln entspricht.
      */
-    // ERSETZE DEINE AKTUELLE isValidMove-FUNKTION VOLLSTÄNDIG HIERMIT
-
     private fun isValidMove(grid: Array<IntArray>, r: Int, c: Int, num: Int): Boolean {
         // === 1. SUDOKU-REGEL ===
         // Prüft, ob 'num' bereits in einer anderen Zelle der gleichen Zeile oder Spalte existiert.
@@ -853,7 +864,6 @@ class Str8tsGenerator {
             val compartmentSize = compartment.size
 
             // REGEL B: Die Spannweite der Zahlen darf NIE größer sein als die Kompartmentgröße.
-            // DIES IST DER ENTSCHEIDENDE FEHLENDE CHECK!
             if (maxVal - minVal + 1 > compartmentSize) {
                 return false
             }
@@ -866,6 +876,87 @@ class Str8tsGenerator {
             }
         }
 
+        // === 3. SCHWARZE HINWEISE CONSTRAINT ===
+        // Prüfe, ob der Zug mit angrenzenden schwarzen Hinweisen kompatibel ist
+        if (!isCompatibleWithBlackHints(grid, r, c, num)) {
+            return false
+        }
+
+        return true
+    }
+
+    /**
+     * Prüft, ob ein Zug mit angrenzenden schwarzen Hinweisen kompatibel ist
+     */
+    private fun isCompatibleWithBlackHints(grid: Array<IntArray>, r: Int, c: Int, num: Int): Boolean {
+        // Prüfe alle angrenzenden schwarzen Felder mit Hinweisen
+        val neighbors = listOf(
+            (r-1 to c), (r+1 to c), (r to c-1), (r to c+1)
+        )
+        
+        for ((nr, nc) in neighbors) {
+            if (nr in 0..8 && nc in 0..8) {
+                val blackHint = layout[nr][nc]
+                if (blackHint != null && blackHint > 0) {
+                    // Es gibt einen schwarzen Hinweis - prüfe Kompatibilität
+                    if (!isNumberCompatibleWithHint(r, c, num, nr, nc, blackHint)) {
+                        return false
+                    }
+                }
+            }
+        }
+        
+        return true
+    }
+    
+    /**
+     * Prüft, ob eine Zahl in einem Kompartment mit einem schwarzen Hinweis kompatibel ist
+     */
+    private fun isNumberCompatibleWithHint(cellR: Int, cellC: Int, num: Int, hintR: Int, hintC: Int, hint: Int): Boolean {
+        // Finde das Kompartment, das die Zelle (cellR, cellC) enthält und an den Hinweis angrenzt
+        val relevantCompartments = cellToCompartmentMap[cellR to cellC] ?: return true
+        
+        for (compartment in relevantCompartments) {
+            // Prüfe, ob dieses Kompartment an den schwarzen Hinweis angrenzt
+            val isAdjacent = compartment.any { (cr, cc) ->
+                (cr == hintR && (cc == hintC - 1 || cc == hintC + 1)) ||
+                (cc == hintC && (cr == hintR - 1 || cr == hintR + 1))
+            }
+            
+            if (isAdjacent) {
+                // Sammle alle Zahlen im Kompartment inklusive der neuen
+                val numbers = mutableListOf<Int>()
+                for ((cr, cc) in compartment) {
+                    val value = if (cr == cellR && cc == cellC) num else {
+                        if (layout[cr][cc] == null) grid[cr][cc] else 0
+                    }
+                    if (value > 0) numbers.add(value)
+                }
+                
+                // Der Hinweis muss in einer gültigen Straight enthalten sein, die das Kompartment bilden könnte
+                if (numbers.isNotEmpty()) {
+                    val minNum = numbers.minOrNull()!!
+                    val maxNum = numbers.maxOrNull()!!
+                    val compSize = compartment.size
+                    
+                    // Prüfe, ob der Hinweis in eine mögliche Straight passt
+                    var validStraightExists = false
+                    for (start in 1..(10 - compSize)) {
+                        val straightRange = start until (start + compSize)
+                        if (hint in straightRange && 
+                            minNum >= start && maxNum < start + compSize) {
+                            validStraightExists = true
+                            break
+                        }
+                    }
+                    
+                    if (!validStraightExists) {
+                        return false
+                    }
+                }
+            }
+        }
+        
         return true
     }
 

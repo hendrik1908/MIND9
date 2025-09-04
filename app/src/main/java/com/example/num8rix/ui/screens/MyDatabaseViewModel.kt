@@ -218,27 +218,31 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
         onResult: (correct: Set<Pair<Int, Int>>, incorrect: Set<Pair<Int, Int>>) -> Unit
     ) {
         viewModelScope.launch {
-            val solutionString = when (difficulty) {
-                DifficultyLevel.EASY -> einfachDao.getSolutionStringById(puzzleId)
-                DifficultyLevel.MEDIUM -> mittelDao.getSolutionStringById(puzzleId)
-                DifficultyLevel.HARD -> schwerDao.getSolutionStringById(puzzleId)
+            val puzzleEntry = when (difficulty) {
+                DifficultyLevel.EASY -> einfachDao.getById(puzzleId)
+                DifficultyLevel.MEDIUM -> mittelDao.getById(puzzleId)
+                DifficultyLevel.HARD -> schwerDao.getById(puzzleId)
             }
 
-            if (solutionString != null) {
+            if (puzzleEntry != null) {
                 val solutionGrid = Grid()
-                solutionGrid.generateGridFromFlatString(solutionString)
+                solutionGrid.generateGridFromFlatString(puzzleEntry.solutionString, puzzleEntry.layoutString)
 
                 val correct = mutableSetOf<Pair<Int, Int>>()
                 val incorrect = mutableSetOf<Pair<Int, Int>>()
 
                 for (row in 0 until 9) {
                     for (col in 0 until 9) {
-                        val userVal = currentGrid.getField(row, col).value
-                        val solVal = solutionGrid.getField(row, col).value
-
-                        if (userVal != 0) {
-                            if (userVal == solVal) correct.add(row to col)
-                            else incorrect.add(row to col)
+                        val currentField = currentGrid.getField(row, col)
+                        val solutionField = solutionGrid.getField(row, col)
+                        
+                        // Nur weiße Felder prüfen
+                        if (currentField.isWhite() && currentField.value != 0) {
+                            if (currentField.value == solutionField.value) {
+                                correct.add(row to col)
+                            } else {
+                                incorrect.add(row to col)
+                            }
                         }
                     }
                 }

@@ -258,7 +258,7 @@ class PuzzleGenerationService : Service() {
         val maxAttempts = 10
 
         repeat(maxAttempts) { attempt ->
-            val puzzle = puzzleGenerator.generateNewPuzzle(difficulty, debug = false) // DEBUG AUS!
+            val puzzle = puzzleGenerator.generateNewPuzzle(difficulty, debug = false)
             if (puzzle != null) {
                 val exists = when (difficulty) {
                     DifficultyLevel.EASY -> database.einfachDao().puzzleExists(puzzle.unsolved)

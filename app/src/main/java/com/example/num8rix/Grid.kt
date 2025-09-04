@@ -225,13 +225,22 @@ class Grid (){
         }
     }
 
-    fun generateGridFromFlatString(flat: String) {
-        if (flat.length != 81) throw IllegalArgumentException("Solution string must have 81 characters")
-        for (i in flat.indices) {
-            val row = i / 9
-            val col = i % 9
-            val value = flat[i].toString().toInt()
-            this.getField(row, col).value = value
+    fun generateGridFromFlatString(flat: String, layoutString: String = "") {
+        // Zuerst das Layout anwenden, um zu wissen, welche Felder weiß sind
+        if (layoutString.isNotEmpty()) {
+            applyLayoutString(layoutString)
+        }
+        
+        // Dann nur die weißen Felder mit der Lösung füllen
+        var flatIndex = 0
+        for (r in 0 until 9) {
+            for (c in 0 until 9) {
+                if (getField(r, c).isWhite() && flatIndex < flat.length) {
+                    val value = flat[flatIndex].toString().toInt()
+                    getField(r, c).value = value
+                    flatIndex++
+                }
+            }
         }
     }
 
