@@ -91,7 +91,7 @@ fun InfoScreen(
             // Ziel Section
             InfoSection(
                 title = "Ziel",
-                content = """Das Ziel von Num8rix ist es, alle Zahlen von 1 bis 9 in das 9x9-Gitter zu vervollständigen, wobei jede Zahl nur einmal in jeder Zeile und Spalte vorkommen darf. Die Zahlen müssen in aufeinander folgenden Sequenzen angeordnet sein, die als 'Num8rix' bezeichnet werden."""
+                content = """Das Ziel von MIND9 ist es, alle Zahlen von 1 bis 9 in das 9x9-Gitter zu vervollständigen, wobei jede Zahl nur einmal in jeder Zeile und Spalte vorkommen darf. Die Zahlen müssen in aufeinander folgenden Sequenzen angeordnet sein, die als 'MIND9' bezeichnet werden."""
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -185,23 +185,23 @@ fun buildSpielregelnText(): String {
 
 3. Jede Zeile und Spalte muss alle Zahlen von 1 bis 9 genau einmal enthalten.
 
-4. Zahlen in weißen Zellen müssen in aufeinanderfolgenden Sequenzen angeordnet sein, die als 'Num8rix' bezeichnet werden.
+4. Zahlen in weißen Zellen müssen in aufeinanderfolgenden Sequenzen angeordnet sein, die als 'MIND9' bezeichnet werden.
 
-5. Num8rix-Sequenzen sind horizontal oder vertikal verlaufen und müssen mindestens zwei aufeinanderfolgende Zahlen enthalten.
+5. MIND9-Sequenzen sind horizontal oder vertikal verlaufen und müssen mindestens zwei aufeinanderfolgende Zahlen enthalten.
 
-6. Num8rix dürfen nicht durch schwarze Zellen unterbrochen werden.
+6. MIND9 dürfen nicht durch schwarze Zellen unterbrochen werden.
 
-7. Zahlen in Num8rix müssen in aufsteigender oder absteigender Reihenfolge angeordnet sein.
+7. Zahlen in MIND9 müssen in aufsteigender oder absteigender Reihenfolge angeordnet sein.
 
-8. Es gibt immer nur eine eindeutige Lösung für jedes Num8rix-Puzzle."""
+8. Es gibt immer nur eine eindeutige Lösung für jedes MIND9-Puzzle."""
 }
 
 fun buildTippsText(): String {
     return """1. Beginnen Sie mit Zeilen und Spalten, die bereits viele Zahlen enthalten.
 
-2. Achten Sie auf schwarze Zellen, da diese die möglichen Positionen für Num8rix einschränken.
+2. Achten Sie auf schwarze Zellen, da diese die möglichen Positionen für MIND9 einschränken.
 
-3. Suchen Sie nach Num8rix, die nur wenige mögliche Positionen haben.
+3. Suchen Sie nach MIND9, die nur wenige mögliche Positionen haben.
 
 4. Verwenden Sie die Logik, um unmögliche Zahlen in Zellen zu eliminieren.
 
