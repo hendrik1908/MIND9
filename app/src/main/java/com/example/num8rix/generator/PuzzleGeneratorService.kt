@@ -18,8 +18,9 @@ class PuzzleGeneratorService {
 
         return if (puzzleGrid != null) {
             PuzzleResult(
-                unsolved = convertToVisualString(generator.grid, generator.layout),
-                solution = convertSolutionToFlatString(generator.solution),
+                unsolved = generator.getPuzzleVisualString(),
+                layout = generator.getLayoutString(),
+                solution = convertSolutionToFlatString(generator.solution, generator.layout),
                 difficulty = difficulty
             )
         } else null
@@ -54,13 +55,20 @@ class PuzzleGeneratorService {
     }
 
     /**
-     * Konvertiert Lösung zu kompaktem String
-     * Format: "534678912672195348..." (81 Zeichen)
+     * Konvertiert Lösung zu kompaktem String (nur weiße Felder)
+     * Format: "534678912672195348..." (nur weiße Zellen)
      */
-    private fun convertSolutionToFlatString(solution: Array<IntArray>): String {
-        return solution.joinToString("") { row ->
-            row.joinToString("")
+    private fun convertSolutionToFlatString(solution: Array<IntArray>, layout: Array<Array<Int?>>): String {
+        val result = StringBuilder()
+        for (r in 0 until 9) {
+            for (c in 0 until 9) {
+                // Nur weiße Felder (layout[r][c] == null) in die Lösung aufnehmen
+                if (layout[r][c] == null) {
+                    result.append(solution[r][c])
+                }
+            }
         }
+        return result.toString()
     }
 }
 
@@ -69,6 +77,7 @@ class PuzzleGeneratorService {
  */
 data class PuzzleResult(
     val unsolved: String,
+    val layout: String,
     val solution: String,
     val difficulty: DifficultyLevel
 )

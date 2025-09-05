@@ -98,6 +98,7 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
         notesGridString: String,
         difficulty: DifficultyLevel,
         originalGridString: String? = null,
+        originalLayoutString: String = "",
         puzzleId: Int,
     ) {
         viewModelScope.launch {
@@ -108,10 +109,18 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
                 existing?.originalGridString ?: currentGridString
             }
 
+            val layout = if (originalLayoutString.isNotEmpty()) {
+                originalLayoutString
+            } else {
+                val existing = gameCacheDao.getLatestEntryByDifficulty(difficulty)
+                existing?.originalLayoutString ?: ""
+            }
+
             val gameState = GameCache(
                 currentGridString = currentGridString,
                 notesGridString = notesGridString,
                 originalGridString = original,
+                originalLayoutString = layout,
                 difficulty = difficulty,
                 puzzleId = puzzleId
             )
@@ -158,7 +167,7 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
                 val grid = Grid()
 
                 // Erst die ursprünglichen Zahlen laden (alle als initial)
-                grid.generateGridFromVisualString(latestState.originalGridString)
+                grid.generateGridFromVisualAndLayout(latestState.originalGridString, latestState.originalLayoutString)
 
                 // Dann den aktuellen Stand darüber laden (ohne initial zu ändern)
                 grid.updateGridFromVisualString(latestState.currentGridString)
@@ -209,27 +218,31 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
         onResult: (correct: Set<Pair<Int, Int>>, incorrect: Set<Pair<Int, Int>>) -> Unit
     ) {
         viewModelScope.launch {
-            val solutionString = when (difficulty) {
-                DifficultyLevel.EASY -> einfachDao.getSolutionStringById(puzzleId)
-                DifficultyLevel.MEDIUM -> mittelDao.getSolutionStringById(puzzleId)
-                DifficultyLevel.HARD -> schwerDao.getSolutionStringById(puzzleId)
+            val puzzleEntry = when (difficulty) {
+                DifficultyLevel.EASY -> einfachDao.getById(puzzleId)
+                DifficultyLevel.MEDIUM -> mittelDao.getById(puzzleId)
+                DifficultyLevel.HARD -> schwerDao.getById(puzzleId)
             }
 
-            if (solutionString != null) {
+            if (puzzleEntry != null) {
                 val solutionGrid = Grid()
-                solutionGrid.generateGridFromFlatString(solutionString)
+                solutionGrid.generateGridFromFlatString(puzzleEntry.solutionString, puzzleEntry.layoutString)
 
                 val correct = mutableSetOf<Pair<Int, Int>>()
                 val incorrect = mutableSetOf<Pair<Int, Int>>()
 
                 for (row in 0 until 9) {
                     for (col in 0 until 9) {
-                        val userVal = currentGrid.getField(row, col).value
-                        val solVal = solutionGrid.getField(row, col).value
-
-                        if (userVal != 0) {
-                            if (userVal == solVal) correct.add(row to col)
-                            else incorrect.add(row to col)
+                        val currentField = currentGrid.getField(row, col)
+                        val solutionField = solutionGrid.getField(row, col)
+                        
+                        // Nur weiße Felder prüfen
+                        if (currentField.isWhite() && currentField.value != 0) {
+                            if (currentField.value == solutionField.value) {
+                                correct.add(row to col)
+                            } else {
+                                incorrect.add(row to col)
+                            }
                         }
                     }
                 }
@@ -239,23 +252,89 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
-    // Nur zum Testen des Screens, damit Eintrag in DB vorhanden ist. Kann bei funktionierendem Algorithmus entfernt werden
-    fun addEinfachEntry(
-        unsolved: String,
-        solution: String,
-        solved: Boolean
+    fun giveHint(
+        difficulty: DifficultyLevel,
+        currentGrid: Grid,
+        puzzleId: Int,
+        onResult: (highlightIncorrect: Pair<Int, Int>?, revealedCell: Pair<Int, Int>?) -> Unit
     ) {
         viewModelScope.launch {
-            val entry = Einfach(
-                unsolvedString = unsolved,
-                solutionString = solution,
-                alreadySolved = solved
-            )
-            einfachDao.insert(entry)
-            println("Beispielrätsel (Einfach) wurde in die DB eingefügt.")
+            val puzzleEntry = when (difficulty) {
+                DifficultyLevel.EASY -> einfachDao.getById(puzzleId)
+                DifficultyLevel.MEDIUM -> mittelDao.getById(puzzleId)
+                DifficultyLevel.HARD -> schwerDao.getById(puzzleId)
+            }
+
+            if (puzzleEntry != null) {
+                val solutionGrid = Grid()
+                solutionGrid.generateGridFromFlatString(puzzleEntry.solutionString, puzzleEntry.layoutString)
+
+                val incorrectCells = mutableListOf<Pair<Int, Int>>()
+                val emptyCells = mutableListOf<Pair<Int, Int>>()
+
+                for (row in 0 until 9) {
+                    for (col in 0 until 9) {
+                        val currentField = currentGrid.getField(row, col)
+                        val solutionField = solutionGrid.getField(row, col)
+
+                        if (currentField.isWhite()) {
+                            if (currentField.value != 0 && currentField.value != solutionField.value) {
+                                incorrectCells.add(row to col) // falsche Zahl
+                            } else if (currentField.value == 0) {
+                                emptyCells.add(row to col) // noch leeres Feld
+                            }
+                        }
+                    }
+                }
+
+                // 50/50 Zufall
+                val randomChoice = (0..1).random()
+
+                if (randomChoice == 0 && incorrectCells.isNotEmpty()) {
+                    // Ein falsches Feld markieren
+                    val chosen = incorrectCells.random()
+                    onResult(chosen, null)
+                } else if (emptyCells.isNotEmpty()) {
+                    // Ein leeres Feld aufdecken
+                    val chosen = emptyCells.random()
+                    val (row, col) = chosen
+                    val solutionValue = solutionGrid.getField(row, col).value
+                    currentGrid.getField(row, col).apply {
+                        value = solutionValue
+                    }
+                    onResult(null, chosen)
+                } else if (incorrectCells.isNotEmpty()) {
+                    // Fallback: wenn keine leeren Zellen mehr → falsches Feld markieren
+                    val chosen = incorrectCells.random()
+                    onResult(chosen, null)
+                }
+            }
         }
     }
-}
 
-// Str8tsGridSerializer.kt (deine Datei aus dem Upload)
-// ... der Inhalt deines Cells2DB Files ...
+    /**
+     * Setzt ein Spiel auf "solved" in der entsprechenden Tabelle
+     */
+    fun markPuzzleAsSolved(difficulty: DifficultyLevel, puzzleId: Int) {
+        viewModelScope.launch {
+            when (difficulty) {
+                DifficultyLevel.EASY -> einfachDao.updateSolvedStatus(puzzleId, true)
+                DifficultyLevel.MEDIUM -> mittelDao.updateSolvedStatus(puzzleId, true)
+                DifficultyLevel.HARD -> schwerDao.updateSolvedStatus(puzzleId, true)
+            }
+        }
+    }
+
+    /**
+     * Löscht alle Cache-Einträge für ein bestimmtes Schwierigkeitslevel
+     */
+    fun clearCacheForDifficulty(difficulty: DifficultyLevel) {
+        viewModelScope.launch {
+            gameCacheDao.deleteCacheByDifficulty(difficulty)
+            println("GameCache für $difficulty wurde geleert.")
+        }
+    }
+
+
+
+}

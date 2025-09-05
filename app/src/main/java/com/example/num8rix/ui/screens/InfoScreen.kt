@@ -1,6 +1,9 @@
 package com.example.num8rix.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,8 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,12 +29,14 @@ import androidx.compose.ui.unit.sp
 fun InfoScreen(
     onBackClick: () -> Unit = {},
     onHomeClick: () -> Unit = {}
-) {
+)
+{
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
+        val context = LocalContext.current
         // Header mit Zurück-Button und Titel
         TopAppBar(
             title = {
@@ -64,6 +71,22 @@ fun InfoScreen(
                 .padding(horizontal = 24.dp)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
+
+            // --- Neuer Link zu str8ts.de ---
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Quelle: str8ts.de",
+                color = Color.Blue,
+                textDecoration = TextDecoration.Underline,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.str8ts.de"))
+                        context.startActivity(intent)
+                    }
+            )
 
             // Ziel Section
             InfoSection(

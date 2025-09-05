@@ -11,7 +11,7 @@ import com.example.num8rix.database.dao.MittelDao
 import com.example.num8rix.database.dao.SchwerDao
 import com.example.num8rix.database.dao.GameCacheDao
 
-@Database(entities = [Einfach::class, Mittel::class, Schwer::class, GameCache::class], version = 6, exportSchema = false)
+@Database(entities = [Einfach::class, Mittel::class, Schwer::class, GameCache::class], version = 7, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun einfachDao(): EinfachDao
     abstract fun mittelDao(): MittelDao

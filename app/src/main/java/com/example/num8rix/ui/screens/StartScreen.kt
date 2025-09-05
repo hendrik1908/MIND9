@@ -1,5 +1,6 @@
 package com.example.num8rix.ui.screens
 
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import com.example.num8rix.R
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun StartScreen(
@@ -35,6 +37,7 @@ fun StartScreen(
     var easyCounts by remember { mutableStateOf(Pair(0, 0)) }
     var mediumCounts by remember { mutableStateOf(Pair(0, 0)) }
     var hardCounts by remember { mutableStateOf(Pair(0, 0)) }
+
 
     LaunchedEffect(Unit) {
         viewModel.getSolvedAndTotalCounts { easy, medium, hard ->
@@ -109,7 +112,7 @@ fun StartScreen(
             DifficultyButton(
                 text = "Einfach",
                 progressText = "${easyCounts.first}/${easyCounts.second}",
-                isPrimary = true,
+                isPrimary = false,
                 onClick = { onGameStart(DifficultyLevel.EASY) }
             )
 
@@ -141,6 +144,8 @@ fun StartScreen(
                 widthFraction = 0.7f, // <--- etwas schmaler als die anderen Buttons
             )
         }
+
+
 
         // Bottom Navigation (nur Home und Info)
         Row(

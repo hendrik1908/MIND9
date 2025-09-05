@@ -3,6 +3,7 @@ package com.example.num8rix.database.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import com.example.num8rix.database.entity.Einfach
 import com.example.num8rix.database.entity.Schwer
 
 @Dao
@@ -32,4 +33,7 @@ interface SchwerDao {
 
     @Query("SELECT COUNT(*) FROM schwer WHERE alreadySolved = 1")
     suspend fun getSolvedCount(): Int
+
+    @Query("SELECT * FROM schwer WHERE id = :itemId LIMIT 1")
+    suspend fun getById(itemId: Int): Schwer?
 }

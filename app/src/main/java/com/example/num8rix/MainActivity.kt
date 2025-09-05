@@ -21,6 +21,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.num8rix.ui.screens.GameScreen
 import com.example.num8rix.ui.screens.MyDatabaseViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.ViewModelProvider
+import com.example.num8rix.ui.screens.MyDatabaseViewModelFactory
 
 
 
@@ -35,9 +37,10 @@ class MainActivity : ComponentActivity() {
 //            MyDatabaseViewModelFactory(application)
 //        )[MyDatabaseViewModel::class.java]
 //
-//        // Testeintrag hinzufügen (nur einmal beim App-Start)
+//        // TEST: Rätsel mit schwarzen Hinweisen hinzufügen
 //        viewModel.addEinfachEntry(
 //            unsolved  = "1········;·5·······;···███···;·········;·····9···;·········;·███·····;·····3···;·····2···",
+//            layout = "1········;·5·······;···705···;·········;·····9···;·········;·403·····;·····3···;·····2···",
 //            solution = "534678912672195348198342567859761423426853791713924856961537284387419625245286179",
 //            solved = false
 //        )
@@ -114,7 +117,9 @@ fun Num8rixApp() {
 
             if (difficulty != null && puzzle != null) {
                 val game = remember(puzzle) {
-                    Game(puzzle).apply { generateGame() }
+                    // Hier müssen wir das Layout aus der Datenbank holen
+                    // Für jetzt verwenden wir einen leeren Layout-String als Fallback
+                    Game(puzzle, "").apply { generateGame() }
                 }
 
                 GameScreen(

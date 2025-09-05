@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -64,6 +67,10 @@ fun GameScreen(
     var grid by remember { mutableStateOf<Grid?>(null) }
     var incorrectCells by remember { mutableStateOf(setOf<Pair<Int, Int>>()) }
     var correctCells by remember { mutableStateOf(setOf<Pair<Int, Int>>()) }
+    var showExitDialog by remember { mutableStateOf(false) }
+
+    // CoroutineScope früh definieren - HIER verschoben!
+    val coroutineScope = rememberCoroutineScope()
 
 
     // Ruft die Datenbank nur einmal beim ersten Composable-Aufbau auf, Game wird asynchron aufgebaut
@@ -76,7 +83,7 @@ fun GameScreen(
             } else {
                 viewModel.getRandomUnsolvedByDifficulty(difficulty) { entry ->
                     if (entry != null) {
-                        val newGame = Game(entry.unsolvedString).apply { generateGame() }
+                        val newGame = Game(entry.unsolvedString, entry.layoutString).apply { generateGame() }
                         grid = newGame.grid
                         game = newGame
                         isLoading = false
@@ -87,6 +94,7 @@ fun GameScreen(
                             notesGridString = newGame.grid.notesToString(),
                             difficulty = difficulty,
                             originalGridString = newGame.grid.toVisualString(),
+                            originalLayoutString = newGame.grid.toLayoutString(),
                             puzzleId = entry.id   // <-- WICHTIG: puzzleId speichern
                         )
                     }
@@ -118,13 +126,14 @@ fun GameScreen(
         }
         return
     }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
             .padding(16.dp)
     ) {
-        // Top Bar mit Zurück-Button und Titel
+        // Top Bar mit Zurück-Button, Titel und X-Button
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -145,7 +154,21 @@ fun GameScreen(
                 modifier = Modifier.weight(1f),
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.width(48.dp)) // Platzhalter rechts
+
+            // X-Button oben rechts (Kreis mit X)
+            IconButton(
+                onClick = { showExitDialog = true },
+                modifier = Modifier
+                    .size(48.dp)
+                    .border(2.dp, Color.Black, CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Schließen",
+                    tint = Color.Black,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(30.dp))
@@ -176,6 +199,7 @@ fun GameScreen(
                                 isInitial = field.isInitial,
                                 isIncorrect = incorrectCells.contains(row to col),
                                 isCorrect = correctCells.contains(row to col),
+                                blackCellHint = field.blackCellValue, // NEU: Hinweiszahl übergeben
                                 //Nur weiße & nicht-initiale Felder dürfen ausgewählt werden
                                 onClick = {
                                     if (!field.isBlack() && !field.isInitial) {
@@ -195,7 +219,6 @@ fun GameScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Zahlenfeld 1-9
-        val coroutineScope = rememberCoroutineScope()
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -312,7 +335,32 @@ fun GameScreen(
                     fontWeight = if (isNoteMode) FontWeight.Bold else FontWeight.Normal
                 )
             }
-            ActionButton("Hinweis") { /* unverändert */ }
+            ActionButton("Hinweis") {
+                coroutineScope.launch {
+                    val latest = viewModel.getLatestCacheEntry(difficulty)
+                    latest?.let { cache ->
+                        viewModel.giveHint(difficulty, currentGrid, cache.puzzleId) { incorrect, revealed ->
+                            if (incorrect != null) {
+                                // Markiere das falsche Feld rot
+                                incorrectCells = setOf(incorrect)
+                            }
+                            if (revealed != null) {
+                                // Spielfeld neu rendern, da Feld jetzt gesetzt ist
+                                grid = currentGrid.copy()
+                                // Speichern nach dem Aufdecken
+                                coroutineScope.launch {
+                                    viewModel.saveGameState(
+                                        currentGridString = currentGrid.toVisualString(),
+                                        notesGridString = currentGrid.notesToString(),
+                                        difficulty = difficulty,
+                                        puzzleId = cache.puzzleId
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             ActionButton("Prüfen") {
                 coroutineScope.launch {
                     val latest = viewModel.getLatestCacheEntry(difficulty)
@@ -330,7 +378,6 @@ fun GameScreen(
             }
             ActionButton("Lösen") { /* unverändert */ }
             // Zurück-Button für Undo
-            // Zurück-Button für Undo
             ActionButton("Zurück") {
                 viewModel.undoLastMove(difficulty) { restoredGrid, restoredNotes ->
                     grid?.let {
@@ -340,10 +387,59 @@ fun GameScreen(
                     }
                 }
             }
-            }
-
         }
     }
+
+    // Bestätigungsdialog für das Verlassen des Spiels
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitDialog = false },
+            title = {
+                Text(
+                    text = "Spiel verlassen",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("Wollen Sie das Spiel endgültig verwerfen?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showExitDialog = false
+
+                        // Erst das Spiel in der DB auf solved setzen und Cache leeren
+                        coroutineScope.launch {
+                            val latest = viewModel.getLatestCacheEntry(difficulty)
+                            latest?.let { cache ->
+                                // 1. Spiel als gelöst markieren
+                                viewModel.markPuzzleAsSolved(difficulty, cache.puzzleId)
+
+                                // 2. Cache für dieses Schwierigkeitslevel leeren
+                                viewModel.clearCacheForDifficulty(difficulty)
+                            }
+
+                            // 3. Dann erst zum Startscreen zurückkehren
+                            onBackClick()
+                        }
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color.Red
+                    )
+                ) {
+                    Text("Ja")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showExitDialog = false }
+                ) {
+                    Text("Nein")
+                }
+            }
+        )
+    }
+}
 
 @Composable
 fun SudokuCell(
@@ -355,7 +451,8 @@ fun SudokuCell(
     notes: Set<Int> = emptySet(),
     isInitial: Boolean = false,
     isIncorrect: Boolean = false,
-    isCorrect: Boolean = false
+    isCorrect: Boolean = false,
+    blackCellHint: Int? = null // NEU: Hinweiszahl für schwarze Felder
 ) {
     Box(
         contentAlignment = Alignment.Center,
@@ -372,6 +469,15 @@ fun SudokuCell(
             .clickable { if (!isBlack) onClick() }
     ) {
         when {
+            isBlack && blackCellHint != null && blackCellHint > 0 -> {
+                // Schwarze Zelle mit Hinweiszahl
+                Text(
+                    text = blackCellHint.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
             value.isNotEmpty() -> { // normale Zahl
                 Text(
                     text = value,
@@ -427,6 +533,7 @@ fun SudokuCell(
         }
     }
 }
+
 @Composable
 fun ActionButton(label: String, onClick: () -> Unit) {
     OutlinedButton(

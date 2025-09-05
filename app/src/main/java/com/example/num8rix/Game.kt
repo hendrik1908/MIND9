@@ -1,6 +1,6 @@
 package com.example.num8rix
 
-class Game(val unsolvedString: String) {
+class Game(val unsolvedString: String, val layoutString: String = "") {
     var grid = Grid()
 
    // Hard Coded Game zum test
@@ -10,8 +10,7 @@ class Game(val unsolvedString: String) {
 //    }
 
     fun generateGame() {
-        grid.generateGridFromVisualString(unsolvedString)
-        grid.printGrid()
+        grid.generateGridFromVisualAndLayout(unsolvedString, layoutString)
     }
 
     fun startGame() {

@@ -12,6 +12,7 @@ data class GameCache(
     val currentGridString: String, // Speichert den aktuellen Spielstand
     val notesGridString: String, // Speichert die Notizen
     val originalGridString: String, // Speichert Vorgegebene Zahlen des Algotithmus
+    val originalLayoutString: String = "", // Speichert das ursprüngliche Layout mit schwarzen Hinweisen
     val difficulty: DifficultyLevel, // Speichert die Schwirigkietsstufe ab
     val puzzleId: Int                // Verweis auf das Rätsel aus Schirigkeitstabelle
 )
