@@ -314,7 +314,32 @@ fun GameScreen(
                     fontWeight = if (isNoteMode) FontWeight.Bold else FontWeight.Normal
                 )
             }
-            ActionButton("Hinweis") { /* unverändert */ }
+            ActionButton("Hinweis") {
+                coroutineScope.launch {
+                    val latest = viewModel.getLatestCacheEntry(difficulty)
+                    latest?.let { cache ->
+                        viewModel.giveHint(difficulty, currentGrid, cache.puzzleId) { incorrect, revealed ->
+                            if (incorrect != null) {
+                                // Markiere das falsche Feld rot
+                                incorrectCells = setOf(incorrect)
+                            }
+                            if (revealed != null) {
+                                // Spielfeld neu rendern, da Feld jetzt gesetzt ist
+                                grid = currentGrid.copy()
+                                // Speichern nach dem Aufdecken
+                                coroutineScope.launch {
+                                    viewModel.saveGameState(
+                                        currentGridString = currentGrid.toVisualString(),
+                                        notesGridString = currentGrid.notesToString(),
+                                        difficulty = difficulty,
+                                        puzzleId = cache.puzzleId
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             ActionButton("Prüfen") {
                 coroutineScope.launch {
                     val latest = viewModel.getLatestCacheEntry(difficulty)
