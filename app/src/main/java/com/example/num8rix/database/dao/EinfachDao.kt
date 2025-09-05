@@ -40,4 +40,12 @@ interface EinfachDao {
 
     @Query("SELECT * FROM einfach WHERE id = :itemId LIMIT 1")
     suspend fun getById(itemId: Int): Einfach?
+
+    // ==================== IMPORT/EXPORT FUNCTIONS ====================
+    
+    @Query("SELECT * FROM einfach")
+    suspend fun getAllPuzzles(): List<Einfach>
+
+    @Query("SELECT COUNT(*) > 0 FROM einfach WHERE unsolvedString = :unsolvedString AND layoutString = :layoutString")
+    suspend fun checkPuzzleExists(unsolvedString: String, layoutString: String): Boolean
 }

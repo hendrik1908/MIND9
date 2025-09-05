@@ -335,6 +335,164 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
+    // ==================== IMPORT/EXPORT FUNCTIONS ====================
+    
+    /**
+     * Adds a new Easy puzzle entry to the database
+     */
+    fun addEinfachEntry(
+        unsolved: String,
+        layout: String,
+        solution: String,
+        solved: Boolean
+    ) {
+        viewModelScope.launch {
+            val entry = Einfach(
+                unsolvedString = unsolved,
+                layoutString = layout,
+                solutionString = solution,
+                alreadySolved = solved
+            )
+            einfachDao.insert(entry)
+        }
+    }
+
+    /**
+     * Adds a new Medium puzzle entry to the database
+     */
+    fun addMittelEntry(
+        unsolved: String,
+        layout: String,
+        solution: String,
+        solved: Boolean
+    ) {
+        viewModelScope.launch {
+            val entry = Mittel(
+                unsolvedString = unsolved,
+                layoutString = layout,
+                solutionString = solution,
+                alreadySolved = solved
+            )
+            mittelDao.insert(entry)
+        }
+    }
+
+    /**
+     * Adds a new Hard puzzle entry to the database
+     */
+    fun addSchwerEntry(
+        unsolved: String,
+        layout: String,
+        solution: String,
+        solved: Boolean
+    ) {
+        viewModelScope.launch {
+            val entry = Schwer(
+                unsolvedString = unsolved,
+                layoutString = layout,
+                solutionString = solution,
+                alreadySolved = solved
+            )
+            schwerDao.insert(entry)
+        }
+    }
+
+    /**
+     * Gets all Easy puzzles for export
+     */
+    fun getAllEasyPuzzles(onResult: (List<Einfach>) -> Unit) {
+        viewModelScope.launch {
+            val puzzles = einfachDao.getAllPuzzles()
+            onResult(puzzles)
+        }
+    }
+
+    /**
+     * Gets all Medium puzzles for export
+     */
+    fun getAllMediumPuzzles(onResult: (List<Mittel>) -> Unit) {
+        viewModelScope.launch {
+            val puzzles = mittelDao.getAllPuzzles()
+            onResult(puzzles)
+        }
+    }
+
+    /**
+     * Gets all Hard puzzles for export
+     */
+    fun getAllHardPuzzles(onResult: (List<Schwer>) -> Unit) {
+        viewModelScope.launch {
+            val puzzles = schwerDao.getAllPuzzles()
+            onResult(puzzles)
+        }
+    }
+
+    /**
+     * Checks if an Easy puzzle already exists
+     */
+    fun checkEasyPuzzleExists(
+        unsolvedString: String,
+        layoutString: String,
+        onResult: (Boolean) -> Unit
+    ) {
+        viewModelScope.launch {
+            val exists = einfachDao.checkPuzzleExists(unsolvedString, layoutString)
+            onResult(exists)
+        }
+    }
+
+    /**
+     * Checks if a Medium puzzle already exists
+     */
+    fun checkMediumPuzzleExists(
+        unsolvedString: String,
+        layoutString: String,
+        onResult: (Boolean) -> Unit
+    ) {
+        viewModelScope.launch {
+            val exists = mittelDao.checkPuzzleExists(unsolvedString, layoutString)
+            onResult(exists)
+        }
+    }
+
+    /**
+     * Checks if a Hard puzzle already exists
+     */
+    fun checkHardPuzzleExists(
+        unsolvedString: String,
+        layoutString: String,
+        onResult: (Boolean) -> Unit
+    ) {
+        viewModelScope.launch {
+            val exists = schwerDao.checkPuzzleExists(unsolvedString, layoutString)
+            onResult(exists)
+        }
+    }
+
+    /**
+     * Initializes pregenerated puzzles on first app start
+     */
+    fun initializePregeneratedPuzzles() {
+        viewModelScope.launch {
+            // Check if we already have puzzles
+            val totalCount = einfachDao.getTotalCount() + mittelDao.getTotalCount() + schwerDao.getTotalCount()
+            
+            if (totalCount == 0) {
+                // No puzzles found, try to load pregenerated ones
+                val importManager = com.example.num8rix.PuzzleImportExportManager(getApplication(), this@MyDatabaseViewModel)
+                val result = importManager.importPregeneratedPuzzles()
+                
+                when (result) {
+                    is com.example.num8rix.ImportResult.Success -> {
+                        println("Pregenerated puzzles imported successfully: ${result.stats.successful} puzzles")
+                    }
+                    is com.example.num8rix.ImportResult.Error -> {
+                        println("Failed to import pregenerated puzzles: ${result.message}")
+                    }
+                }
+            }
+        }
+    }
 
 
 }

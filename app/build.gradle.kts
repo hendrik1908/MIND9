@@ -68,6 +68,9 @@ dependencies {
 
     // Dependency für die ViewModel Composable-Funktion
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0") // Überprüfe die neueste Version!
+    
+    // Gson für JSON Import/Export
+    implementation("com.google.code.gson:gson:2.13.1")
 }
 
 room {

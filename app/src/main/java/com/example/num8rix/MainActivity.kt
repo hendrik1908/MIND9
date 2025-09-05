@@ -32,18 +32,13 @@ class MainActivity : ComponentActivity() {
 
 
 //        // Eintrag in DB zum Testen, lädt Daten beim Start des Spiels in DB
-//        val viewModel: MyDatabaseViewModel = ViewModelProvider(
-//            this,
-//            MyDatabaseViewModelFactory(application)
-//        )[MyDatabaseViewModel::class.java]
-//
-//        // TEST: Rätsel mit schwarzen Hinweisen hinzufügen
-//        viewModel.addEinfachEntry(
-//            unsolved  = "1········;·5·······;···███···;·········;·····9···;·········;·███·····;·····3···;·····2···",
-//            layout = "1········;·5·······;···705···;·········;·····9···;·········;·403·····;·····3···;·····2···",
-//            solution = "534678912672195348198342567859761423426853791713924856961537284387419625245286179",
-//            solved = false
-//        )
+        val viewModel: MyDatabaseViewModel = ViewModelProvider(
+            this,
+            MyDatabaseViewModelFactory(application)
+        )[MyDatabaseViewModel::class.java]
+        
+        // Initialize pregenerated puzzles on first app start
+        viewModel.initializePregeneratedPuzzles()
 
         setContent {
             Num8rixTheme {

@@ -21,6 +21,11 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.num8rix.DifficultyLevel
 import com.example.num8rix.generator.PuzzleGenerationService
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.example.num8rix.PuzzleImportExportManager
+import com.example.num8rix.ImportResult
+import kotlinx.coroutines.launch
 import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,6 +35,7 @@ fun GeneratorScreen(
     onBackClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     
     var easyCount by remember { mutableStateOf(5) }
     var mediumCount by remember { mutableStateOf(5) }
@@ -45,6 +51,45 @@ fun GeneratorScreen(
     var errorMessage by remember { mutableStateOf("") }
     
     var totalCounts by remember { mutableStateOf(Triple(0, 0, 0)) }
+    
+    // Import/Export States
+    var showImportExportDialog by remember { mutableStateOf(false) }
+    var isImporting by remember { mutableStateOf(false) }
+    var isExporting by remember { mutableStateOf(false) }
+    var importResultMessage by remember { mutableStateOf("") }
+    var showImportResultDialog by remember { mutableStateOf(false) }
+    
+    // Initialize ImportExportManager
+    val importExportManager = remember { PuzzleImportExportManager(context, viewModel) }
+    
+    // File picker for import
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            isImporting = true
+            coroutineScope.launch {
+                val result = importExportManager.importPuzzlesFromUri(it)
+                when (result) {
+                    is ImportResult.Success -> {
+                        importResultMessage = "Import erfolgreich!\n" +
+                                "${result.stats.successful} Rätsel importiert\n" +
+                                "${result.stats.duplicates} Duplikate übersprungen\n" +
+                                "${result.stats.errors} Fehler"
+                        // Aktualisiere Zählungen
+                        viewModel.getTotalPuzzleCounts { easy, medium, hard ->
+                            totalCounts = Triple(easy, medium, hard)
+                        }
+                    }
+                    is ImportResult.Error -> {
+                        importResultMessage = "Import fehlgeschlagen:\n${result.message}"
+                    }
+                }
+                showImportResultDialog = true
+                isImporting = false
+            }
+        }
+    }
     
     // Prüfe beim Start ob Service bereits läuft
     LaunchedEffect(Unit) {
@@ -309,6 +354,78 @@ fun GeneratorScreen(
                         fontWeight = FontWeight.Medium
                     )
                 }
+                
+                // Import/Export Buttons
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Import Button
+                    Button(
+                        onClick = { importLauncher.launch("application/json") },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF2196F3),
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        enabled = !isGenerating && !isImporting && !isExporting
+                    ) {
+                        if (isImporting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = Color.White
+                            )
+                        } else {
+                            Text(
+                                text = "⚙️ Importieren",
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                    
+                    // Export Button
+                    Button(
+                        onClick = {
+                            coroutineScope.launch {
+                                isExporting = true
+                                val uri = importExportManager.exportAllPuzzles()
+                                isExporting = false
+                                if (uri != null) {
+                                    importResultMessage = "Export erfolgreich!\nDatei wurde im Downloads-Ordner gespeichert."
+                                } else {
+                                    importResultMessage = "Export fehlgeschlagen!"
+                                }
+                                showImportResultDialog = true
+                            }
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50),
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        enabled = !isGenerating && !isImporting && !isExporting
+                    ) {
+                        if (isExporting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = Color.White
+                            )
+                        } else {
+                            Text(
+                                text = "📤 Exportieren",
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
             }
             
             Spacer(modifier = Modifier.height(20.dp))
@@ -374,6 +491,33 @@ fun GeneratorScreen(
                     color = Color(0xFF454545),
                     lineHeight = 20.sp
                 ) 
+            },
+            containerColor = Color.White
+        )
+    }
+    
+    // Import/Export Result Dialog
+    if (showImportResultDialog) {
+        AlertDialog(
+            onDismissRequest = { showImportResultDialog = false },
+            title = { 
+                Text(
+                    "Import/Export Ergebnis",
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF2C2C2C)
+                ) 
+            },
+            text = { 
+                Text(
+                    importResultMessage,
+                    lineHeight = 20.sp,
+                    color = Color(0xFF454545)
+                ) 
+            },
+            confirmButton = {
+                TextButton(onClick = { showImportResultDialog = false }) {
+                    Text("OK", color = Color(0xFF2C2C2C))
+                }
             },
             containerColor = Color.White
         )

@@ -38,7 +38,6 @@ fun StartScreen(
     var mediumCounts by remember { mutableStateOf(Pair(0, 0)) }
     var hardCounts by remember { mutableStateOf(Pair(0, 0)) }
 
-
     LaunchedEffect(Unit) {
         viewModel.getSolvedAndTotalCounts { easy, medium, hard ->
             easyCounts = easy

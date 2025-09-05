@@ -36,4 +36,12 @@ interface SchwerDao {
 
     @Query("SELECT * FROM schwer WHERE id = :itemId LIMIT 1")
     suspend fun getById(itemId: Int): Schwer?
+
+    // ==================== IMPORT/EXPORT FUNCTIONS ====================
+    
+    @Query("SELECT * FROM schwer")
+    suspend fun getAllPuzzles(): List<Schwer>
+
+    @Query("SELECT COUNT(*) > 0 FROM schwer WHERE unsolvedString = :unsolvedString AND layoutString = :layoutString")
+    suspend fun checkPuzzleExists(unsolvedString: String, layoutString: String): Boolean
 }

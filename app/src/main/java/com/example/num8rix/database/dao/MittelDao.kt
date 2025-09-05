@@ -36,4 +36,12 @@ interface MittelDao {
 
     @Query("SELECT * FROM mittel WHERE id = :itemId LIMIT 1")
     suspend fun getById(itemId: Int): Mittel?
+
+    // ==================== IMPORT/EXPORT FUNCTIONS ====================
+    
+    @Query("SELECT * FROM mittel")
+    suspend fun getAllPuzzles(): List<Mittel>
+
+    @Query("SELECT COUNT(*) > 0 FROM mittel WHERE unsolvedString = :unsolvedString AND layoutString = :layoutString")
+    suspend fun checkPuzzleExists(unsolvedString: String, layoutString: String): Boolean
 }
