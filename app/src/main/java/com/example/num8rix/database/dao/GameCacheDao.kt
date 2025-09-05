@@ -24,4 +24,7 @@ interface GameCacheDao {
 
     @Query("DELETE FROM game_cache WHERE id = (SELECT id FROM game_cache WHERE difficulty = :difficulty ORDER BY id DESC LIMIT 1)")
     suspend fun deleteLatestEntryByDifficulty(difficulty: DifficultyLevel)
+
+    @Query("DELETE FROM game_cache WHERE difficulty = :difficulty")
+    suspend fun deleteCacheByDifficulty(difficulty: DifficultyLevel)
 }

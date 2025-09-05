@@ -312,6 +312,29 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
+    /**
+     * Setzt ein Spiel auf "solved" in der entsprechenden Tabelle
+     */
+    fun markPuzzleAsSolved(difficulty: DifficultyLevel, puzzleId: Int) {
+        viewModelScope.launch {
+            when (difficulty) {
+                DifficultyLevel.EASY -> einfachDao.updateSolvedStatus(puzzleId, true)
+                DifficultyLevel.MEDIUM -> mittelDao.updateSolvedStatus(puzzleId, true)
+                DifficultyLevel.HARD -> schwerDao.updateSolvedStatus(puzzleId, true)
+            }
+        }
+    }
+
+    /**
+     * Löscht alle Cache-Einträge für ein bestimmtes Schwierigkeitslevel
+     */
+    fun clearCacheForDifficulty(difficulty: DifficultyLevel) {
+        viewModelScope.launch {
+            gameCacheDao.deleteCacheByDifficulty(difficulty)
+            println("GameCache für $difficulty wurde geleert.")
+        }
+    }
+
 
 
 }

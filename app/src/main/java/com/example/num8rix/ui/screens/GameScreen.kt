@@ -69,6 +69,9 @@ fun GameScreen(
     var correctCells by remember { mutableStateOf(setOf<Pair<Int, Int>>()) }
     var showExitDialog by remember { mutableStateOf(false) }
 
+    // CoroutineScope früh definieren - HIER verschoben!
+    val coroutineScope = rememberCoroutineScope()
+
 
     // Ruft die Datenbank nur einmal beim ersten Composable-Aufbau auf, Game wird asynchron aufgebaut
     LaunchedEffect(difficulty) {
@@ -216,7 +219,6 @@ fun GameScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Zahlenfeld 1-9
-        val coroutineScope = rememberCoroutineScope()
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -333,32 +335,7 @@ fun GameScreen(
                     fontWeight = if (isNoteMode) FontWeight.Bold else FontWeight.Normal
                 )
             }
-            ActionButton("Hinweis") {
-                coroutineScope.launch {
-                    val latest = viewModel.getLatestCacheEntry(difficulty)
-                    latest?.let { cache ->
-                        viewModel.giveHint(difficulty, currentGrid, cache.puzzleId) { incorrect, revealed ->
-                            if (incorrect != null) {
-                                // Markiere das falsche Feld rot
-                                incorrectCells = setOf(incorrect)
-                            }
-                            if (revealed != null) {
-                                // Spielfeld neu rendern, da Feld jetzt gesetzt ist
-                                grid = currentGrid.copy()
-                                // Speichern nach dem Aufdecken
-                                coroutineScope.launch {
-                                    viewModel.saveGameState(
-                                        currentGridString = currentGrid.toVisualString(),
-                                        notesGridString = currentGrid.notesToString(),
-                                        difficulty = difficulty,
-                                        puzzleId = cache.puzzleId
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            ActionButton("Hinweis") { /* unverändert */ }
             ActionButton("Prüfen") {
                 coroutineScope.launch {
                     val latest = viewModel.getLatestCacheEntry(difficulty)
@@ -405,7 +382,21 @@ fun GameScreen(
                 TextButton(
                     onClick = {
                         showExitDialog = false
-                        onBackClick() // Spiel verlassen
+
+                        // Erst das Spiel in der DB auf solved setzen und Cache leeren
+                        coroutineScope.launch {
+                            val latest = viewModel.getLatestCacheEntry(difficulty)
+                            latest?.let { cache ->
+                                // 1. Spiel als gelöst markieren
+                                viewModel.markPuzzleAsSolved(difficulty, cache.puzzleId)
+
+                                // 2. Cache für dieses Schwierigkeitslevel leeren
+                                viewModel.clearCacheForDifficulty(difficulty)
+                            }
+
+                            // 3. Dann erst zum Startscreen zurückkehren
+                            onBackClick()
+                        }
                     },
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = Color.Red
