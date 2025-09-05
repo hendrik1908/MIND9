@@ -252,25 +252,66 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
-    // Nur zum Testen des Screens, damit Eintrag in DB vorhanden ist. Kann bei funktionierendem Algorithmus entfernt werden
-    fun addEinfachEntry(
-        unsolved: String,
-        layout: String = "",
-        solution: String,
-        solved: Boolean
+    fun giveHint(
+        difficulty: DifficultyLevel,
+        currentGrid: Grid,
+        puzzleId: Int,
+        onResult: (highlightIncorrect: Pair<Int, Int>?, revealedCell: Pair<Int, Int>?) -> Unit
     ) {
         viewModelScope.launch {
-            val entry = Einfach(
-                unsolvedString = unsolved,
-                layoutString = layout,
-                solutionString = solution,
-                alreadySolved = solved
-            )
-            einfachDao.insert(entry)
-            println("Beispielrätsel (Einfach) wurde in die DB eingefügt.")
+            val puzzleEntry = when (difficulty) {
+                DifficultyLevel.EASY -> einfachDao.getById(puzzleId)
+                DifficultyLevel.MEDIUM -> mittelDao.getById(puzzleId)
+                DifficultyLevel.HARD -> schwerDao.getById(puzzleId)
+            }
+
+            if (puzzleEntry != null) {
+                val solutionGrid = Grid()
+                solutionGrid.generateGridFromFlatString(puzzleEntry.solutionString, puzzleEntry.layoutString)
+
+                val incorrectCells = mutableListOf<Pair<Int, Int>>()
+                val emptyCells = mutableListOf<Pair<Int, Int>>()
+
+                for (row in 0 until 9) {
+                    for (col in 0 until 9) {
+                        val currentField = currentGrid.getField(row, col)
+                        val solutionField = solutionGrid.getField(row, col)
+
+                        if (currentField.isWhite()) {
+                            if (currentField.value != 0 && currentField.value != solutionField.value) {
+                                incorrectCells.add(row to col) // falsche Zahl
+                            } else if (currentField.value == 0) {
+                                emptyCells.add(row to col) // noch leeres Feld
+                            }
+                        }
+                    }
+                }
+
+                // 50/50 Zufall
+                val randomChoice = (0..1).random()
+
+                if (randomChoice == 0 && incorrectCells.isNotEmpty()) {
+                    // Ein falsches Feld markieren
+                    val chosen = incorrectCells.random()
+                    onResult(chosen, null)
+                } else if (emptyCells.isNotEmpty()) {
+                    // Ein leeres Feld aufdecken
+                    val chosen = emptyCells.random()
+                    val (row, col) = chosen
+                    val solutionValue = solutionGrid.getField(row, col).value
+                    currentGrid.getField(row, col).apply {
+                        value = solutionValue
+                    }
+                    onResult(null, chosen)
+                } else if (incorrectCells.isNotEmpty()) {
+                    // Fallback: wenn keine leeren Zellen mehr → falsches Feld markieren
+                    val chosen = incorrectCells.random()
+                    onResult(chosen, null)
+                }
+            }
         }
     }
-}
 
-// Str8tsGridSerializer.kt (deine Datei aus dem Upload)
-// ... der Inhalt deines Cells2DB Files ...
+
+
+}
