@@ -55,12 +55,12 @@ fun StartScreen(
                 .padding(top = 64.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "MIND9",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
+            //Text(
+                //text = "MIND9",
+                //fontSize = 24.sp,
+                //fontWeight = FontWeight.Bold,
+                //color = Color.Black
+            //)
         }
 
         // APP LOGO
@@ -76,7 +76,7 @@ fun StartScreen(
                 painter = painterResource(id = R.drawable.mind9_full_logo),
                 contentDescription = "App Logo",
                 modifier = Modifier
-                    .size(200.dp) // Größe
+                    .size(300.dp) // Größe
             )
         }
 
