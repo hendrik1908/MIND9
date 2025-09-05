@@ -51,6 +51,7 @@ fun GeneratorScreen(
     var errorMessage by remember { mutableStateOf("") }
     
     var totalCounts by remember { mutableStateOf(Triple(0, 0, 0)) }
+    var availableCounts by remember { mutableStateOf(Triple(Pair(0, 0), Pair(0, 0), Pair(0, 0))) }
     
     // Import/Export States
     var showImportExportDialog by remember { mutableStateOf(false) }
@@ -76,9 +77,12 @@ fun GeneratorScreen(
                                 "${result.stats.successful} Rätsel importiert\n" +
                                 "${result.stats.duplicates} Duplikate übersprungen\n" +
                                 "${result.stats.errors} Fehler"
-                        // Aktualisiere Zählungen
+                        // Aktualisiere sowohl total counts als auch available counts
                         viewModel.getTotalPuzzleCounts { easy, medium, hard ->
                             totalCounts = Triple(easy, medium, hard)
+                        }
+                        viewModel.getSolvedAndTotalCounts { easy, medium, hard ->
+                            availableCounts = Triple(easy, medium, hard)
                         }
                     }
                     is ImportResult.Error -> {
@@ -93,8 +97,13 @@ fun GeneratorScreen(
     
     // Prüfe beim Start ob Service bereits läuft
     LaunchedEffect(Unit) {
+        // Lade sowohl total counts als auch solved/total counts
         viewModel.getTotalPuzzleCounts { easy, medium, hard ->
             totalCounts = Triple(easy, medium, hard)
+        }
+        
+        viewModel.getSolvedAndTotalCounts { easy, medium, hard ->
+            availableCounts = Triple(easy, medium, hard)
         }
         
         // Prüfe ob PuzzleGenerationService bereits läuft
@@ -131,6 +140,9 @@ fun GeneratorScreen(
                         // Aktualisiere Rätsel-Anzahlen
                         viewModel.getTotalPuzzleCounts { easy, medium, hard ->
                             totalCounts = Triple(easy, medium, hard)
+                        }
+                        viewModel.getSolvedAndTotalCounts { easy, medium, hard ->
+                            availableCounts = Triple(easy, medium, hard)
                         }
                     }
                     PuzzleGenerationService.ACTION_GENERATION_ERROR -> {
@@ -241,7 +253,7 @@ fun GeneratorScreen(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // Status-Anzeige der vorhandenen Rätsel
+            // Status-Anzeige der noch verfügbaren Rätsel
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -251,7 +263,7 @@ fun GeneratorScreen(
                     modifier = Modifier.padding(20.dp)
                 ) {
                     Text(
-                        text = "Vorhandene Rätsel in der Datenbank",
+                        text = "Noch verfügbare Rätsel",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF2C2C2C),
@@ -262,9 +274,21 @@ fun GeneratorScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        PuzzleCountDisplay("Einfach", totalCounts.first)
-                        PuzzleCountDisplay("Mittel", totalCounts.second)
-                        PuzzleCountDisplay("Schwer", totalCounts.third)
+                        PuzzleCountDisplay(
+                            "Einfach", 
+                            availableCounts.first.first, 
+                            availableCounts.first.second
+                        )
+                        PuzzleCountDisplay(
+                            "Mittel", 
+                            availableCounts.second.first, 
+                            availableCounts.second.second
+                        )
+                        PuzzleCountDisplay(
+                            "Schwer", 
+                            availableCounts.third.first, 
+                            availableCounts.third.second
+                        )
                     }
                 }
             }
@@ -473,6 +497,9 @@ fun GeneratorScreen(
                         viewModel.getTotalPuzzleCounts { easy, medium, hard ->
                             totalCounts = Triple(easy, medium, hard)
                         }
+                        viewModel.getSolvedAndTotalCounts { easy, medium, hard ->
+                            availableCounts = Triple(easy, medium, hard)
+                        }
                     }
                 ) {
                     Text("Verstanden", color = Color(0xFF2C2C2C))
@@ -552,13 +579,13 @@ fun GeneratorScreen(
 }
 
 @Composable
-fun PuzzleCountDisplay(title: String, count: Int) {
+fun PuzzleCountDisplay(title: String, available: Int, total: Int) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = count.toString(),
-            fontSize = 28.sp,
+            text = "$available/$total",
+            fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF2C2C2C)
         )

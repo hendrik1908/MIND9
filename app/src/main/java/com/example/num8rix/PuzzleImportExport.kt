@@ -248,12 +248,8 @@ class PuzzleImportExportManager(
                     inputStream.bufferedReader().readText()
                 } ?: return@withContext ImportResult.Error("Datei konnte nicht gelesen werden")
                 
-                Log.d("PuzzleImport", "JSON Inhalt gelesen: ${jsonString.take(200)}...")
-                
                 val gson = Gson()
                 val exportFile = gson.fromJson(jsonString, PuzzleExportFile::class.java)
-                
-                Log.d("PuzzleImport", "Parsed ${exportFile.puzzles.size} puzzles from file")
                 
                 if (exportFile.puzzles.isEmpty()) {
                     return@withContext ImportResult.Error("Keine Rätsel in der Datei gefunden")
@@ -263,28 +259,14 @@ class PuzzleImportExportManager(
                 
                 exportFile.puzzles.forEach { puzzle ->
                     try {
-                        Log.d("PuzzleImport", "Importing puzzle: ${puzzle.difficulty}, ID: ${puzzle.id}")
-                        Log.d("PuzzleImport", "Unsolved length: ${puzzle.unsolvedString.length}")
-                        Log.d("PuzzleImport", "Solution length: ${puzzle.solution.length}")
-                        Log.d("PuzzleImport", "Layout length: ${puzzle.layoutString.length}")
-                        
                         val result = importSinglePuzzle(puzzle)
                         when (result) {
-                            ImportSingleResult.SUCCESS -> {
-                                importStats.successful++
-                                Log.d("PuzzleImport", "Successfully imported puzzle ${puzzle.id}")
-                            }
-                            ImportSingleResult.DUPLICATE -> {
-                                importStats.duplicates++
-                                Log.d("PuzzleImport", "Skipped duplicate puzzle ${puzzle.id}")
-                            }
-                            ImportSingleResult.ERROR -> {
-                                importStats.errors++
-                                Log.e("PuzzleImport", "Failed to import puzzle ${puzzle.id}")
-                            }
+                            ImportSingleResult.SUCCESS -> importStats.successful++
+                            ImportSingleResult.DUPLICATE -> importStats.duplicates++
+                            ImportSingleResult.ERROR -> importStats.errors++
                         }
                     } catch (e: Exception) {
-                        Log.e("PuzzleImport", "Exception importing puzzle ${puzzle.id}", e)
+                        Log.e("PuzzleImport", "Fehler beim Importieren einzelnes Rätsel", e)
                         importStats.errors++
                     }
                 }
@@ -377,45 +359,27 @@ class PuzzleImportExportManager(
     private fun validatePuzzleFormat(puzzle: ExportablePuzzle): Boolean {
         // Grundlegende Validierung
         if (puzzle.unsolvedString.isBlank() || puzzle.solution.isBlank()) {
-            Log.e("PuzzleImport", "Validation failed: Blank unsolved or solution string")
             return false
         }
         
         // Prüfe String-Format (9 Zeilen mit ; getrennt)
         val unsolvedRows = puzzle.unsolvedString.split(";")
-        if (unsolvedRows.size != 9) {
-            Log.e("PuzzleImport", "Validation failed: Unsolved string has ${unsolvedRows.size} rows, expected 9")
-            return false
-        }
+        if (unsolvedRows.size != 9) return false
         
         // Jede Zeile muss 9 Zeichen haben
-        if (!unsolvedRows.all { it.length == 9 }) {
-            Log.e("PuzzleImport", "Validation failed: Not all unsolved rows have 9 characters")
-            unsolvedRows.forEachIndexed { index, row ->
-                if (row.length != 9) {
-                    Log.e("PuzzleImport", "Row $index has ${row.length} characters: '$row'")
-                }
-            }
-            return false
-        }
+        if (!unsolvedRows.all { it.length == 9 }) return false
         
-        // KORREKTUR: Solution kann entweder 81 Zeichen (full grid) oder weniger (nur weiße Felder) haben
-        // Wir akzeptieren beide Formate
-        if (puzzle.solution.length < 20) {
-            Log.e("PuzzleImport", "Validation failed: Solution too short (${puzzle.solution.length} characters)")
-            return false
-        }
+        // Solution kann entweder 81 Zeichen (full grid) oder weniger (nur weiße Felder) haben
+        if (puzzle.solution.length < 20) return false // Mindestens 20 Zeichen sollten es schon sein
         
         // Layout-String validieren (falls vorhanden)
         if (puzzle.layoutString.isNotBlank()) {
             val layoutRows = puzzle.layoutString.split(";")
             if (layoutRows.size != 9 || !layoutRows.all { it.length == 9 }) {
-                Log.e("PuzzleImport", "Validation failed: Invalid layout string format")
                 return false
             }
         }
         
-        Log.d("PuzzleImport", "Puzzle validation passed for ${puzzle.difficulty} puzzle")
         return true
     }
     
