@@ -1,5 +1,7 @@
 package com.example.num8rix.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,8 +24,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextDecoration
 import com.example.num8rix.R
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun StartScreen(
@@ -35,6 +40,7 @@ fun StartScreen(
     var easyCounts by remember { mutableStateOf(Pair(0, 0)) }
     var mediumCounts by remember { mutableStateOf(Pair(0, 0)) }
     var hardCounts by remember { mutableStateOf(Pair(0, 0)) }
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.getSolvedAndTotalCounts { easy, medium, hard ->
@@ -141,6 +147,22 @@ fun StartScreen(
                 widthFraction = 0.7f, // <--- etwas schmaler als die anderen Buttons
             )
         }
+
+        // --- Neuer Link zu str8ts.de ---
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "str8ts.de",
+            color = Color.Blue,
+            textDecoration = TextDecoration.Underline,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.str8ts.de"))
+                    context.startActivity(intent)
+                }
+        )
 
         // Bottom Navigation (nur Home und Info)
         Row(
