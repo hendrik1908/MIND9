@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -64,6 +67,7 @@ fun GameScreen(
     var grid by remember { mutableStateOf<Grid?>(null) }
     var incorrectCells by remember { mutableStateOf(setOf<Pair<Int, Int>>()) }
     var correctCells by remember { mutableStateOf(setOf<Pair<Int, Int>>()) }
+    var showExitDialog by remember { mutableStateOf(false) }
 
 
     // Ruft die Datenbank nur einmal beim ersten Composable-Aufbau auf, Game wird asynchron aufgebaut
@@ -75,23 +79,23 @@ fun GameScreen(
                 isLoading = false
             } else {
                 viewModel.getRandomUnsolvedByDifficulty(difficulty) { entry ->
-                if (entry != null) {
-                val newGame = Game(entry.unsolvedString, entry.layoutString).apply { generateGame() }
-                grid = newGame.grid
-                game = newGame
-                isLoading = false
+                    if (entry != null) {
+                        val newGame = Game(entry.unsolvedString, entry.layoutString).apply { generateGame() }
+                        grid = newGame.grid
+                        game = newGame
+                        isLoading = false
 
-                // EINMALIG: Erstes Speichern inkl. puzzleId
-                viewModel.saveGameState(
-                currentGridString = newGame.grid.toVisualString(),
-                notesGridString = newGame.grid.notesToString(),
-                difficulty = difficulty,
-                originalGridString = newGame.grid.toVisualString(),
-                originalLayoutString = newGame.grid.toLayoutString(),
-                    puzzleId = entry.id   // <-- WICHTIG: puzzleId speichern
-                    )
+                        // EINMALIG: Erstes Speichern inkl. puzzleId
+                        viewModel.saveGameState(
+                            currentGridString = newGame.grid.toVisualString(),
+                            notesGridString = newGame.grid.notesToString(),
+                            difficulty = difficulty,
+                            originalGridString = newGame.grid.toVisualString(),
+                            originalLayoutString = newGame.grid.toLayoutString(),
+                            puzzleId = entry.id   // <-- WICHTIG: puzzleId speichern
+                        )
                     }
-                        }
+                }
             }
         }
     }
@@ -119,13 +123,14 @@ fun GameScreen(
         }
         return
     }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
             .padding(16.dp)
     ) {
-        // Top Bar mit Zurück-Button und Titel
+        // Top Bar mit Zurück-Button, Titel und X-Button
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -146,7 +151,21 @@ fun GameScreen(
                 modifier = Modifier.weight(1f),
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.width(48.dp)) // Platzhalter rechts
+
+            // X-Button oben rechts (Kreis mit X)
+            IconButton(
+                onClick = { showExitDialog = true },
+                modifier = Modifier
+                    .size(48.dp)
+                    .border(2.dp, Color.Black, CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Schließen",
+                    tint = Color.Black,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(30.dp))
@@ -332,7 +351,6 @@ fun GameScreen(
             }
             ActionButton("Lösen") { /* unverändert */ }
             // Zurück-Button für Undo
-            // Zurück-Button für Undo
             ActionButton("Zurück") {
                 viewModel.undoLastMove(difficulty) { restoredGrid, restoredNotes ->
                     grid?.let {
@@ -342,10 +360,45 @@ fun GameScreen(
                     }
                 }
             }
-            }
-
         }
     }
+
+    // Bestätigungsdialog für das Verlassen des Spiels
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitDialog = false },
+            title = {
+                Text(
+                    text = "Spiel verlassen",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("Wollen Sie das Spiel endgültig verwerfen?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showExitDialog = false
+                        onBackClick() // Spiel verlassen
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color.Red
+                    )
+                ) {
+                    Text("Ja")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showExitDialog = false }
+                ) {
+                    Text("Nein")
+                }
+            }
+        )
+    }
+}
 
 @Composable
 fun SudokuCell(
@@ -439,6 +492,7 @@ fun SudokuCell(
         }
     }
 }
+
 @Composable
 fun ActionButton(label: String, onClick: () -> Unit) {
     OutlinedButton(

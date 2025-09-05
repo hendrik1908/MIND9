@@ -109,7 +109,7 @@ fun StartScreen(
             DifficultyButton(
                 text = "Einfach",
                 progressText = "${easyCounts.first}/${easyCounts.second}",
-                isPrimary = true,
+                isPrimary = false,
                 onClick = { onGameStart(DifficultyLevel.EASY) }
             )
 
