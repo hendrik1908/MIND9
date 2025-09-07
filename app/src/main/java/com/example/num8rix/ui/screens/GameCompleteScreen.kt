@@ -20,8 +20,6 @@ import androidx.compose.ui.window.DialogProperties
 @Composable
 fun CompletionScreen(
     difficulty: String = "Mind9 gelöst",
-    time: String = "00:05:32",
-    moves: Int = 128,
     onHomeClick: () -> Unit = {}
 ) {
     Box(
@@ -77,29 +75,12 @@ fun CompletionScreen(
 
             // Beschreibung
             Text(
-                text = "Du hast das Mind9-Rätsel erfolgreich gelöst.\nHier ist eine Zusammenfassung deiner Leistung:",
+                text = "Du hast das Mind9-Rätsel erfolgreich gelöst!",
                 fontSize = 14.sp,
                 color = Color.Gray,
                 textAlign = TextAlign.Center,
                 lineHeight = 18.sp
             )
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Statistiken
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                StatCard(
-                    label = "Zeit",
-                    value = time
-                )
-                StatCard(
-                    label = "Züge",
-                    value = moves.toString()
-                )
-            }
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -123,44 +104,6 @@ fun CompletionScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-        }
-    }
-}
-
-
-@Composable
-fun StatCard(
-    label: String,
-    value: String
-) {
-    Card(
-        modifier = Modifier
-            .width(120.dp)
-            .height(80.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F8)),
-        border = BorderStroke(1.dp, Color(0xFFE0E0E0))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = label,
-                fontSize = 14.sp,
-                color = Color.Gray,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
         }
     }
 }
