@@ -423,7 +423,6 @@ fun GameScreen(
                     }
                 }
             }
-            ActionButton("Lösen") { /* unverändert */ }
             // Zurück-Button für Undo
             ActionButton("Zurück") {
                 viewModel.undoLastMove(difficulty) { restoredGrid, restoredNotes ->
@@ -644,7 +643,7 @@ fun SudokuCell(
                     color = when {
                         isInitial -> Color.Black
                         isIncorrect -> Color.Red
-                        isCorrect -> Color.Green
+                        isCorrect -> Color(0xFF2E7D32)
                         else -> Color.Blue
                     }
 
