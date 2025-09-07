@@ -69,9 +69,48 @@ fun GameScreen(
     var correctCells by remember { mutableStateOf(setOf<Pair<Int, Int>>()) }
     var showExitDialog by remember { mutableStateOf(false) }
 
+    // NEU: States für das Spielende-Popup
+    var showGameCompleteDialog by remember { mutableStateOf(false) }
+    var isGameWon by remember { mutableStateOf(false) }
+
     // CoroutineScope früh definieren - HIER verschoben!
     val coroutineScope = rememberCoroutineScope()
 
+    // NEU: Funktion zur Überprüfung ob das Spiel beendet ist
+    fun checkGameCompletion() {
+        val currentGrid = grid ?: return
+
+        // Prüfe ob alle weißen Felder ausgefüllt sind
+        var allWhiteFieldsFilled = true
+        for (row in 0 until 9) {
+            for (col in 0 until 9) {
+                val field = currentGrid.getField(row, col)
+                if (field.isWhite() && field.value == 0) {
+                    allWhiteFieldsFilled = false
+                    break
+                }
+            }
+            if (!allWhiteFieldsFilled) break
+        }
+
+        if (allWhiteFieldsFilled) {
+            // Alle Felder sind ausgefüllt - prüfe ob die Lösung korrekt ist
+            coroutineScope.launch {
+                val latest = viewModel.getLatestCacheEntry(difficulty)
+                latest?.let { cache ->
+                    viewModel.checkCurrentGridWithHighlights(
+                        difficulty,
+                        currentGrid,
+                        cache.puzzleId
+                    ) { correct, incorrect ->
+                        // Wenn keine falschen Felder vorhanden sind, ist das Spiel gewonnen
+                        isGameWon = incorrect.isEmpty()
+                        showGameCompleteDialog = true
+                    }
+                }
+            }
+        }
+    }
 
     // Ruft die Datenbank nur einmal beim ersten Composable-Aufbau auf, Game wird asynchron aufgebaut
     LaunchedEffect(difficulty) {
@@ -250,7 +289,11 @@ fun GameScreen(
                                 grid = currentGrid.copy()
                                 //falsche Markierungen zurücksetzen
                                 incorrectCells = emptySet()
-                                // Aktuellen Spielstand speichern inkl. Notizen und pro Schwirigkeitslevel
+
+                                // NEU: Überprüfe nach jedem Zug ob das Spiel beendet ist
+                                checkGameCompletion()
+
+                                // Aktuellen Spielstand speichern inkl. Notizen und pro Schwierigkeitslevel
                                 coroutineScope.launch {
                                     val latest = viewModel.getLatestCacheEntry(difficulty)
                                     latest?.let { cache ->
@@ -347,6 +390,10 @@ fun GameScreen(
                             if (revealed != null) {
                                 // Spielfeld neu rendern, da Feld jetzt gesetzt ist
                                 grid = currentGrid.copy()
+
+                                // NEU: Nach Hinweis auch auf Spielende prüfen
+                                checkGameCompletion()
+
                                 // Speichern nach dem Aufdecken
                                 coroutineScope.launch {
                                     viewModel.saveGameState(
@@ -387,6 +434,116 @@ fun GameScreen(
                     }
                 }
             }
+        }
+    }
+
+    //Game Complete Dialog
+    if (showGameCompleteDialog) {
+        if (isGameWon) {
+            // Erfolgreich gelöst
+            AlertDialog(
+                onDismissRequest = { /* Nicht schließbar durch Tippen außerhalb */ },
+                title = {
+                    Text(
+                        text = "Glückwunsch!",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                text = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Sie haben das MIND9-Rätsel erfolgreich gelöst!",
+                            fontSize = 16.sp,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 22.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Schwierigkeitsgrad: ${when(difficulty) {
+                                DifficultyLevel.EASY -> "Einfach"
+                                DifficultyLevel.MEDIUM -> "Mittel"
+                                DifficultyLevel.HARD -> "Schwer"
+                            }}",
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showGameCompleteDialog = false
+
+                            // Logik vom Abbruch-Button übernehmen
+                            coroutineScope.launch {
+                                val latest = viewModel.getLatestCacheEntry(difficulty)
+                                latest?.let { cache ->
+                                    // 1. Spiel als gelöst markieren
+                                    viewModel.markPuzzleAsSolved(difficulty, cache.puzzleId)
+
+                                    // 2. Cache für dieses Schwierigkeitslevel leeren
+                                    viewModel.clearCacheForDifficulty(difficulty)
+                                }
+
+                                // 3. Zum Startscreen zurückkehren
+                                onBackClick()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50),
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "Zum Home Screen",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                },
+                containerColor = Color.White
+            )
+        } else {
+            // Nicht alle Felder korrekt
+            AlertDialog(
+                onDismissRequest = { showGameCompleteDialog = false },
+                title = {
+                    Text(
+                        text = "Noch nicht ganz richtig!",
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF000000),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Leider sind nicht alle Felder korrekt ausgefüllt. " +
+                                "Überprüfen Sie Ihre Eingaben und versuchen Sie es erneut.",
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 22.sp
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { showGameCompleteDialog = false },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF2196F3),
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Zurück zum Spiel")
+                    }
+                },
+                containerColor = Color.White
+            )
         }
     }
 
