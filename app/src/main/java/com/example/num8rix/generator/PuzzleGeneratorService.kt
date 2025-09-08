@@ -1,0 +1,83 @@
+package com.example.num8rix.generator
+
+import com.example.num8rix.DifficultyLevel
+
+class PuzzleGeneratorService {
+
+    /**
+     * Generiert ein neues Str8ts-Puzzle
+     * @param difficulty App-Schwierigkeit (EASY, MEDIUM, HARD)
+     * @param debug Ob Debug-Ausgaben angezeigt werden sollen
+     * @return Pair von (unsolvedString, solutionString) oder null bei Fehler
+     */
+    fun generateNewPuzzle(difficulty: DifficultyLevel, debug: Boolean = false): PuzzleResult? {
+        val generator = Str8tsGenerator()
+
+        val generatorDifficulty = mapDifficulty(difficulty)
+        val puzzleGrid = generator.generate(generatorDifficulty, debug)
+
+        return if (puzzleGrid != null) {
+            PuzzleResult(
+                unsolved = generator.getPuzzleVisualString(),
+                layout = generator.getLayoutString(),
+                solution = convertSolutionToFlatString(generator.solution, generator.layout),
+                difficulty = difficulty
+            )
+        } else null
+    }
+
+    /**
+     * Mappt App-Schwierigkeit auf Generator-Schwierigkeit
+     * WICHTIG: HARD wird übersprungen, stattdessen wird EXPERT für schwere Rätsel verwendet
+     */
+    private fun mapDifficulty(appDifficulty: DifficultyLevel): GeneratorDifficulty {
+        return when(appDifficulty) {
+            DifficultyLevel.EASY -> GeneratorDifficulty.EASY
+            DifficultyLevel.MEDIUM -> GeneratorDifficulty.MEDIUM
+            DifficultyLevel.HARD -> GeneratorDifficulty.EXPERT // ← EXPERT statt HARD verwenden
+        }
+    }
+
+    /**
+     * Konvertiert Grid + Layout zu Visual String Format
+     * Format: "1········;·5·······;···███···;..."
+     */
+    private fun convertToVisualString(grid: Array<IntArray>, layout: Array<Array<Int?>>): String {
+        return Array(9) { row ->
+            Array(9) { col ->
+                when (layout[row][col]) {
+                    null -> if (grid[row][col] == 0) '·' else grid[row][col].toString()[0]
+                    0 -> '█'
+                    else -> layout[row][col].toString()[0]
+                }
+            }.joinToString("")
+        }.joinToString(";")
+    }
+
+    /**
+     * Konvertiert Lösung zu kompaktem String (nur weiße Felder)
+     * Format: "534678912672195348..." (nur weiße Zellen)
+     */
+    private fun convertSolutionToFlatString(solution: Array<IntArray>, layout: Array<Array<Int?>>): String {
+        val result = StringBuilder()
+        for (r in 0 until 9) {
+            for (c in 0 until 9) {
+                // Nur weiße Felder (layout[r][c] == null) in die Lösung aufnehmen
+                if (layout[r][c] == null) {
+                    result.append(solution[r][c])
+                }
+            }
+        }
+        return result.toString()
+    }
+}
+
+/**
+ * Ergebnis der Puzzle-Generierung
+ */
+data class PuzzleResult(
+    val unsolved: String,
+    val layout: String,
+    val solution: String,
+    val difficulty: DifficultyLevel
+)
