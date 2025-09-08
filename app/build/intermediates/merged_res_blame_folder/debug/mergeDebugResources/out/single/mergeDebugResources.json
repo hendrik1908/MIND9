@@ -1,0 +1,138 @@
+[
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-hdpi_mind9_foreground.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-hdpi/mind9_foreground.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-xhdpi_mind9.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-xhdpi/mind9.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-anydpi-v26_mind9_round.xml.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-anydpi-v26/mind9_round.xml"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.example.num8rix.app-main-62:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/xml_backup_rules.xml.flat",
+        "source": "com.example.num8rix.app-main-62:/xml/backup_rules.xml"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/xml_data_extraction_rules.xml.flat",
+        "source": "com.example.num8rix.app-main-62:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/drawable_mind9_full_logo.png.flat",
+        "source": "com.example.num8rix.app-main-62:/drawable/mind9_full_logo.png"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-xhdpi_ic_launcher_round.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-xhdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-hdpi_ic_launcher.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-hdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-xxhdpi_mind9_round.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-xxhdpi/mind9_round.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-xxxhdpi_mind9_round.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-xxxhdpi/mind9_round.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-mdpi_ic_launcher.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-mdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-xxxhdpi_ic_launcher.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-xxxhdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-anydpi_ic_launcher.xml.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-anydpi/ic_launcher.xml"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-xxxhdpi_ic_launcher_round.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-xxxhdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-mdpi_mind9_round.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-mdpi/mind9_round.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-xxxhdpi_mind9.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-xxxhdpi/mind9.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-anydpi_ic_launcher_round.xml.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-anydpi/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-mdpi_mind9.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-mdpi/mind9.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-xxhdpi_ic_launcher.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-xxhdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-xxhdpi_ic_launcher_round.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-xxhdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-xhdpi_ic_launcher.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-xhdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-xxxhdpi_mind9_foreground.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-xxxhdpi/mind9_foreground.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.example.num8rix.app-main-62:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-hdpi_ic_launcher_round.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-hdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-hdpi_mind9.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-hdpi/mind9.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-hdpi_mind9_round.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-hdpi/mind9_round.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-mdpi_mind9_foreground.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-mdpi/mind9_foreground.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-xxhdpi_mind9.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-xxhdpi/mind9.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-xxhdpi_mind9_foreground.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-xxhdpi/mind9_foreground.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-mdpi_ic_launcher_round.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-mdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-xhdpi_mind9_round.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-xhdpi/mind9_round.webp"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-anydpi-v26_mind9.xml.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-anydpi-v26/mind9.xml"
+    },
+    {
+        "merged": "com.example.num8rix.app-debug-60:/mipmap-xhdpi_mind9_foreground.webp.flat",
+        "source": "com.example.num8rix.app-main-62:/mipmap-xhdpi/mind9_foreground.webp"
+    }
+]
