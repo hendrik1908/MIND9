@@ -393,8 +393,8 @@ fun GeneratorScreen(
                             .weight(1f)
                             .height(48.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF2196F3),
-                            contentColor = Color.White
+                            containerColor = Color(0xFFEEEEEE),
+                            contentColor = Color.Black
                         ),
                         shape = RoundedCornerShape(8.dp),
                         enabled = !isGenerating && !isImporting && !isExporting
@@ -402,11 +402,11 @@ fun GeneratorScreen(
                         if (isImporting) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(16.dp),
-                                color = Color.White
+                                color = Color.Black
                             )
                         } else {
                             Text(
-                                text = "⚙️ Importieren",
+                                text = "Importieren",
                                 fontSize = 14.sp
                             )
                         }
@@ -431,8 +431,8 @@ fun GeneratorScreen(
                             .weight(1f)
                             .height(48.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50),
-                            contentColor = Color.White
+                            containerColor = Color(0xFFEEEEEE),
+                            contentColor = Color.Black
                         ),
                         shape = RoundedCornerShape(8.dp),
                         enabled = !isGenerating && !isImporting && !isExporting
@@ -440,11 +440,11 @@ fun GeneratorScreen(
                         if (isExporting) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(16.dp),
-                                color = Color.White
+                                color = Color.Black
                             )
                         } else {
                             Text(
-                                text = "📤 Exportieren",
+                                text = "Exportieren",
                                 fontSize = 14.sp
                             )
                         }
