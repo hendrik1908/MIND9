@@ -1,5 +1,8 @@
 package com.example.num8rix
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,13 +26,30 @@ import com.example.num8rix.ui.screens.MyDatabaseViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.num8rix.ui.screens.MyDatabaseViewModelFactory
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 
 
 
 class MainActivity : ComponentActivity() {
+
+    // Registriert den Launcher, um das Ergebnis der Berechtigungsanfrage zu verarbeiten
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                // Berechtigung wurde erteilt.
+                println("Benachrichtigungsberechtigung erteilt.")
+            } else {
+                // Berechtigung wurde abgelehnt.
+                println("Benachrichtigungsberechtigung abgelehnt.")
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Rufe die Funktion zur Berechtigungsanfrage auf, bevor das UI geladen wird
+        requestNotificationPermission()
 
 //        // Eintrag in DB zum Testen, lädt Daten beim Start des Spiels in DB
         val viewModel: MyDatabaseViewModel = ViewModelProvider(
@@ -51,7 +71,29 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    // Funktion, die die Benachrichtigungsberechtigung anfordert
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            when {
+                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                        PackageManager.PERMISSION_GRANTED -> {
+                    // Die Berechtigung wurde bereits erteilt.
+                }
+
+                shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
+                    // Zeige eine UI-Nachricht an, bevor du die Anfrage sendest.
+                }
+
+                else -> {
+                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+        }
+    }
+
 }
+
 
 @Composable
 fun Num8rixApp() {
