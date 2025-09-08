@@ -258,11 +258,13 @@ fun GameScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Zahlenfeld 1-9
-        Row(
+        @OptIn(ExperimentalLayoutApi::class)
+        FlowRow(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.Center,
+            maxItemsInEachRow = 9
         ) {
             for (i in 1..9) {
                 Button(
@@ -308,7 +310,9 @@ fun GameScreen(
                             }
                         }
                     },
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier
+                        .size(38.dp)
+                        .padding(2.dp),
                     contentPadding = PaddingValues(0.dp),
                     colors = if (isNoteMode) {  //dynamische Farbe grau bei aktiven Notizmodus
                         ButtonDefaults.buttonColors(

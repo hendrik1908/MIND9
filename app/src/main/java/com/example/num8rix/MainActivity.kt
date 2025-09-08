@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
         )[MyDatabaseViewModel::class.java]
         
         // Initialize pregenerated puzzles on first app start
-        viewModel.initializePregeneratedPuzzles()
+        //viewModel.initializePregeneratedPuzzles()
 
         setContent {
             Num8rixTheme {

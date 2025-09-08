@@ -382,36 +382,7 @@ class PuzzleImportExportManager(
         
         return true
     }
-    
-    // ==================== PREGENERATED IMPORT ====================
-    
-    suspend fun importPregeneratedPuzzles(): ImportResult {
-        return try {
-            val inputStream = context.assets.open("pregenerated_puzzles.mind9")
-            val jsonString = inputStream.bufferedReader().use { it.readText() }
-            
-            val gson = Gson()
-            val exportFile = gson.fromJson(jsonString, PuzzleExportFile::class.java)
-            
-            val importStats = ImportStats()
-            
-            exportFile.puzzles.forEach { puzzle ->
-                val result = importSinglePuzzle(puzzle)
-                when (result) {
-                    ImportSingleResult.SUCCESS -> importStats.successful++
-                    ImportSingleResult.DUPLICATE -> importStats.duplicates++
-                    ImportSingleResult.ERROR -> importStats.errors++
-                }
-            }
-            
-            Log.i("PuzzleImport", "Vorgenerierte Rätsel importiert: ${importStats.successful} erfolgreich")
-            ImportResult.Success(importStats)
-        } catch (e: Exception) {
-            Log.e("PuzzleImport", "Vorgenerierte Rätsel konnten nicht geladen werden", e)
-            ImportResult.Error("Vorgenerierte Rätsel konnten nicht geladen werden: ${e.message}")
-        }
-    }
-    
+
     // ==================== HELPER ====================
     
     private fun getCurrentDateString(): String {

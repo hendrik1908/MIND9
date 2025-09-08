@@ -469,30 +469,5 @@ open class MyDatabaseViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
-    /**
-     * Initializes pregenerated puzzles on first app start
-     */
-    fun initializePregeneratedPuzzles() {
-        viewModelScope.launch {
-            // Check if we already have puzzles
-            val totalCount = einfachDao.getTotalCount() + mittelDao.getTotalCount() + schwerDao.getTotalCount()
-            
-            if (totalCount == 0) {
-                // No puzzles found, try to load pregenerated ones
-                val importManager = com.example.num8rix.PuzzleImportExportManager(getApplication(), this@MyDatabaseViewModel)
-                val result = importManager.importPregeneratedPuzzles()
-                
-                when (result) {
-                    is com.example.num8rix.ImportResult.Success -> {
-                        println("Pregenerated puzzles imported successfully: ${result.stats.successful} puzzles")
-                    }
-                    is com.example.num8rix.ImportResult.Error -> {
-                        println("Failed to import pregenerated puzzles: ${result.message}")
-                    }
-                }
-            }
-        }
-    }
-
 
 }
