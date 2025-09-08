@@ -1,0 +1,5 @@
+Initial release of MIND9
+- Core puzzle generation engine
+- Background service for smooth gameplay
+- Basic puzzle solving interface
+- Save/load functionality

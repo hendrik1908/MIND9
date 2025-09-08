@@ -1,0 +1,9 @@
+MIND9 is a puzzle game that challenges your logical thinking with number-based puzzles. 
+
+Features:
+- Randomly generated puzzles
+- Background puzzle generation
+- Clean, intuitive interface
+- Save and continue puzzles
+
+Perfect for puzzle enthusiasts who enjoy number games and logical challenges.
