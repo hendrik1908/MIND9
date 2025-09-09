@@ -1,12 +1,9 @@
 package com.example.num8rix.ui.screens
 
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
@@ -28,8 +25,8 @@ fun StartScreen(
     viewModel: MyDatabaseViewModel,
     onInfoClick: () -> Unit = {},
     onGameStart: (DifficultyLevel) -> Unit = {},
-    onGeneratorClick: () -> Unit = {} //Callback für Generator-Screen
-){
+    onGeneratorClick: () -> Unit = {}
+) {
     var easyCounts by remember { mutableStateOf(Pair(0, 0)) }
     var mediumCounts by remember { mutableStateOf(Pair(0, 0)) }
     var hardCounts by remember { mutableStateOf(Pair(0, 0)) }
@@ -41,49 +38,33 @@ fun StartScreen(
             hardCounts = hard
         }
     }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 64.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            //Text(
-            //text = "MIND9",
-            //fontSize = 24.sp,
-            //fontWeight = FontWeight.Bold,
-            //color = Color.Black
-            //)
-        }
+        // Logo an oberster Stelle
+        Spacer(modifier = Modifier.height(64.dp))
 
-        // APP LOGO
+        Image(
+            painter = painterResource(id = R.drawable.mind9_full_logo),
+            contentDescription = "App Logo",
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .wrapContentHeight()
+                .padding(vertical = 16.dp)
+        )
+
+        // Flexible Spacer für die vertikale Zentrierung des Hauptinhalts
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Hauptinhalt: Texte und Schwierigkeits-Buttons
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(top = 0.dp, bottom = 0.dp), // Abstand zum Text oben und unten
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.mind9_full_logo),
-                contentDescription = "App Logo",
-                modifier = Modifier
-                    .size(300.dp) // Größe
-            )
-        }
-
-        // Hauptinhalt
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState()), // <-- HIER IST DIE KORREKTUR
+                .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -92,12 +73,11 @@ fun StartScreen(
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 16.dp)
+                textAlign = TextAlign.Center
             )
 
             Text(
-                text = "Wähle ein Schwierigkeitsgrad aus, um zu beginnen",
+                text = "Wähle einen Schwierigkeitsgrad aus, um zu beginnen",
                 fontSize = 16.sp,
                 color = Color(0xFF666666),
                 textAlign = TextAlign.Center,
@@ -129,25 +109,26 @@ fun StartScreen(
                 isPrimary = false,
                 onClick = { onGameStart(DifficultyLevel.HARD) }
             )
-
-            // NEU: Generator Button
-            Spacer(modifier = Modifier.height(48.dp))
-
-            DifficultyButton(
-                text = "Rätsel Generieren",
-                isPrimary = false, // sekundärer Stil, Farbe setzen wir manuell
-                onClick = onGeneratorClick,
-                widthFraction = 0.7f, // <--- etwas schmaler als die anderen Buttons
-            )
         }
 
+        // Flexibler Spacer für den Abstand zum Generator-Button
+        Spacer(modifier = Modifier.weight(1.5f))
 
+        // Rätsel Generieren Button
+        DifficultyButton(
+            text = "Rätsel Generieren",
+            isPrimary = false,
+            onClick = onGeneratorClick,
+            widthFraction = 0.7f,
+        )
 
-        // Bottom Navigation (nur Home und Info)
+        // Spacer, um die Bottom Navigation am unteren Rand zu fixieren
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Bottom Navigation
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -158,7 +139,6 @@ fun StartScreen(
                     tint = Color.Black
                 )
             }
-
             IconButton(onClick = onInfoClick) {
                 Icon(
                     imageVector = Icons.Default.Info,
@@ -196,13 +176,10 @@ fun DifficultyButton(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            // Zentrierter Button-Text
             Text(
                 text = text,
                 fontSize = 18.sp
             )
-
-            // Fortschritt rechts
             if (progressText != null) {
                 Text(
                     text = progressText,
