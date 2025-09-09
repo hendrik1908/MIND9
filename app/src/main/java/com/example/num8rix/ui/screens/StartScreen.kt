@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.num8rix.DifficultyLevel
 import com.example.num8rix.R
+import com.example.num8rix.ui.screens.BottomNavigation // <-- IMPORTANT: Import the new file
 
 @Composable
 fun StartScreen(
@@ -26,7 +27,7 @@ fun StartScreen(
     onInfoClick: () -> Unit = {},
     onGameStart: (DifficultyLevel) -> Unit = {},
     onGeneratorClick: () -> Unit = {}
-) {
+){
     var easyCounts by remember { mutableStateOf(Pair(0, 0)) }
     var mediumCounts by remember { mutableStateOf(Pair(0, 0)) }
     var hardCounts by remember { mutableStateOf(Pair(0, 0)) }
@@ -46,7 +47,6 @@ fun StartScreen(
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Logo an oberster Stelle
         Spacer(modifier = Modifier.height(64.dp))
 
         Image(
@@ -58,10 +58,8 @@ fun StartScreen(
                 .padding(vertical = 16.dp)
         )
 
-        // Flexible Spacer für die vertikale Zentrierung des Hauptinhalts
         Spacer(modifier = Modifier.weight(1f))
 
-        // Hauptinhalt: Texte und Schwierigkeits-Buttons
         Column(
             modifier = Modifier
                 .fillMaxWidth(),
@@ -84,7 +82,6 @@ fun StartScreen(
                 modifier = Modifier.padding(bottom = 32.dp)
             )
 
-            // Schwierigkeitsgrad Buttons
             DifficultyButton(
                 text = "Einfach",
                 progressText = "${easyCounts.first}/${easyCounts.second}",
@@ -111,10 +108,8 @@ fun StartScreen(
             )
         }
 
-        // Flexibler Spacer für den Abstand zum Generator-Button
         Spacer(modifier = Modifier.weight(1.5f))
 
-        // Rätsel Generieren Button
         DifficultyButton(
             text = "Rätsel Generieren",
             isPrimary = false,
@@ -122,34 +117,18 @@ fun StartScreen(
             widthFraction = 0.7f,
         )
 
-        // Spacer, um die Bottom Navigation am unteren Rand zu fixieren
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Bottom Navigation
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = { /* Bereits auf Home */ }) {
-                Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = "Startseite",
-                    tint = Color.Black
-                )
-            }
-            IconButton(onClick = onInfoClick) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "Info",
-                    tint = Color.Gray
-                )
-            }
-        }
+        // This will now use the function from the separate file
+        BottomNavigation(
+            onHomeClick = { /* Already on Home */ },
+            onInfoClick = onInfoClick,
+            currentScreen = "home"
+        )
     }
 }
 
+// HIER SIND DIE HILFSFUNKTIONEN, DIE IN DIESER DATEI BLEIBEN
 @Composable
 fun DifficultyButton(
     text: String,

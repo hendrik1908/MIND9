@@ -23,21 +23,20 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.num8rix.ui.screens.BottomNavigation // <-- WICHTIG: Importiere die neue Datei
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InfoScreen(
     onBackClick: () -> Unit = {},
     onHomeClick: () -> Unit = {}
-)
-{
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
         val context = LocalContext.current
-        // Header mit Zurück-Button und Titel
         TopAppBar(
             title = {
                 Text(
@@ -63,7 +62,6 @@ fun InfoScreen(
             )
         )
 
-        // Scrollbarer Inhalt
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -71,8 +69,6 @@ fun InfoScreen(
                 .padding(horizontal = 24.dp)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
-
-            // --- Neuer Link zu str8ts.de ---
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
@@ -88,7 +84,6 @@ fun InfoScreen(
                     }
             )
 
-            // Ziel Section
             InfoSection(
                 title = "Ziel",
                 content = """Das Ziel von MIND9 ist es, alle Zahlen von 1 bis 9 in das 9x9-Gitter zu vervollständigen, wobei jede Zahl nur einmal in jeder Zeile und Spalte vorkommen darf. Die Zahlen müssen in aufeinander folgenden Sequenzen angeordnet sein, die als 'MIND9' bezeichnet werden."""
@@ -96,7 +91,6 @@ fun InfoScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Spielregeln Section
             InfoSection(
                 title = "Spielregeln",
                 content = buildSpielregelnText()
@@ -104,16 +98,15 @@ fun InfoScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Tipps Section
             InfoSection(
                 title = "Tipps",
                 content = buildTippsText()
             )
 
-            Spacer(modifier = Modifier.height(80.dp)) // Platz für Bottom Navigation
+            Spacer(modifier = Modifier.height(80.dp))
         }
 
-        // Bottom Navigation (nur Home und Info)
+        // Rufe die geteilte Komponente auf
         BottomNavigation(
             onHomeClick = onHomeClick,
             onInfoClick = { /* Bereits auf Info */ },
@@ -122,6 +115,7 @@ fun InfoScreen(
     }
 }
 
+// HIER SIND DIE HILFSFUNKTIONEN, DIE IN DIESER DATEI BLEIBEN
 @Composable
 fun InfoSection(
     title: String,
@@ -143,38 +137,6 @@ fun InfoSection(
             lineHeight = 20.sp,
             textAlign = TextAlign.Left
         )
-    }
-}
-
-@Composable
-fun BottomNavigation(
-    onHomeClick: () -> Unit,
-    onInfoClick: () -> Unit,
-    currentScreen: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFFF5F5F5))
-            .padding(vertical = 16.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(onClick = onHomeClick) {
-            Icon(
-                imageVector = Icons.Default.Home,
-                contentDescription = "Startseite",
-                tint = if (currentScreen == "home") Color.Black else Color.Gray
-            )
-        }
-
-        IconButton(onClick = onInfoClick) {
-            Icon(
-                imageVector = Icons.Default.Info,
-                contentDescription = "Info",
-                tint = if (currentScreen == "info") Color.Black else Color.Gray
-            )
-        }
     }
 }
 
@@ -206,10 +168,4 @@ fun buildTippsText(): String {
 4. Verwenden Sie die Logik, um unmögliche Zahlen in Zellen zu eliminieren.
 
 5. Wenn Sie nicht weiterkommen, versuchen Sie, mit einer Zelle zu beginnen und alle Konsequenzen zu prüfen."""
-}
-
-@Preview(showBackground = true)
-@Composable
-fun InfoScreenPreview() {
-    InfoScreen()
 }
