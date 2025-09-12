@@ -1,5 +1,4 @@
 package com.example.num8rix.ui.screens
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -111,7 +110,7 @@ fun StartScreen(
         Spacer(modifier = Modifier.weight(1.5f))
 
         DifficultyButton(
-            text = "Rätsel Generieren",
+            text = "Rätsel generieren",
             isPrimary = false,
             onClick = onGeneratorClick,
             widthFraction = 0.7f,

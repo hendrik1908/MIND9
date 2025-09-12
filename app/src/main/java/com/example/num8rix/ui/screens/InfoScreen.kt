@@ -84,10 +84,6 @@ fun InfoScreen(
                     }
             )
 
-            InfoSection(
-                title = "Ziel",
-                content = """Das Ziel von MIND9 ist es, alle Zahlen von 1 bis 9 in das 9x9-Gitter zu vervollständigen, wobei jede Zahl nur einmal in jeder Zeile und Spalte vorkommen darf. Die Zahlen müssen in aufeinander folgenden Sequenzen angeordnet sein, die als 'MIND9' bezeichnet werden."""
-            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -141,31 +137,16 @@ fun InfoSection(
 }
 
 fun buildSpielregelnText(): String {
-    return """1. Das Gitter muss aus schwarzen und weißen Zellen. Schwarze Zellen sind gesperrt und können keine Zahlen enthalten.
-
-2. Weiße Zellen müssen mit Zahlen von 1 bis 9 gefüllt werden.
-
-3. Jede Zeile und Spalte muss alle Zahlen von 1 bis 9 genau einmal enthalten.
-
-4. Zahlen in weißen Zellen müssen in aufeinanderfolgenden Sequenzen angeordnet sein, die als 'MIND9' bezeichnet werden.
-
-5. MIND9-Sequenzen sind horizontal oder vertikal verlaufen und müssen mindestens zwei aufeinanderfolgende Zahlen enthalten.
-
-6. MIND9 dürfen nicht durch schwarze Zellen unterbrochen werden.
-
-7. Zahlen in MIND9 müssen in aufsteigender oder absteigender Reihenfolge angeordnet sein.
-
-8. Es gibt immer nur eine eindeutige Lösung für jedes MIND9-Puzzle."""
+    return """In MIND9 trägst du die Zahlen von 1 bis 9 in die weißen Felder eines 9×9-Gitters ein. Dabei gilt: Jede Zahl darf in jeder Zeile und jeder Spalte nur einmal vorkommen.
+Zusätzlich enthält das Gitter schwarze Felder, die eine besondere Rolle spielen. Sie unterteilen das Spielfeld in sogenannte „Minds“ – das sind zusammenhängende horizontale oder vertikale Gruppen weißer Felder. Schwarze Felder dürfen nicht befüllt werden, können aber Zahlen enthalten. Diese blockieren die entsprechende Zahl für die gesamte Zeile und Spalte, in der sie stehen – sie darf dort also nicht mehr verwendet werden. Zahlen in schwarzen Feldern sind nicht Teil der „Minds“.
+Ein „Mind“ besteht aus einer lückenlosen Zahlenfolge, zum Beispiel 3-2-4 oder 6-8-7. Die Reihenfolge innerhalb eines „Mind“ ist beliebig, solange die Zahlenfolge keine Lücke enthält (z.B. 1-4-5 ist nicht zulässig).
+Ziel ist es, alle weißen Felder korrekt zu befüllen, ohne gegen die Regeln zu verstoßen."""
 }
 
 fun buildTippsText(): String {
-    return """1. Beginnen Sie mit Zeilen und Spalten, die bereits viele Zahlen enthalten.
-
-2. Achten Sie auf schwarze Zellen, da diese die möglichen Positionen für MIND9 einschränken.
-
-3. Suchen Sie nach MIND9, die nur wenige mögliche Positionen haben.
-
-4. Verwenden Sie die Logik, um unmögliche Zahlen in Zellen zu eliminieren.
-
-5. Wenn Sie nicht weiterkommen, versuchen Sie, mit einer Zelle zu beginnen und alle Konsequenzen zu prüfen."""
+    return """Für Einsteiger empfiehlt es sich mit dem Schwierigkeitsgrad „leicht“ zu starten und sich dann nach und nach an die schwierigeren Level zu wagen.
+Beginne mit dem Eintragen von Zahlen bei den kleinsten „Minds“, die bestenfalls nur aus zwei bis drei Kästchen bestehen. Hier ist die Lösung meist eindeutig.
+Im Vergleich zum beliebten Ratespiel Sudoku kommen bei MIND9 nicht alle Zahlen in jeder Zeile und Spalte vor, da die schwarzen Kästchen auch leer sein können.
+Nutze den Notizmodus, um dir potenzielle Zahlenkandidaten für bestimmte Kästchen zu merken, somit siehst du schnell, wenn nur eine Zahl in einem Kästchen möglich ist.
+Falls du nicht weiterkommst, kannst du die Hinweisfunktion nutzen. Diese deckt entweder die Lösung für ein Feld auf oder zeigt dir eine Zahl in rot an falls du einen Fehler gemacht hast. Letzteres kannst du auch über den Prüfen-Button selbst initiieren."""
 }
