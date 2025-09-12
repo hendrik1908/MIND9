@@ -232,7 +232,7 @@ fun GeneratorScreen(
                     )
                 }
                 Text(
-                    text = "Rätsel Generieren",
+                    text = "Rätsel generieren",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
@@ -470,7 +470,7 @@ fun GeneratorScreen(
                         color = Color(0xFF8A6400)
                     )
                     Text(
-                        text = "• Die Generierung läuft im Hintergrund\n" +
+                        text = "• Die Generierung läuft im Hintergrund und kann – je nach Handynutzung und Umfang – unterschiedlich lange dauern\n" +
                                "• Sie erhalten eine Benachrichtigung bei Abschluss\n" +
                                "• Duplikate werden automatisch vermieden",
                         fontSize = 12.sp,
