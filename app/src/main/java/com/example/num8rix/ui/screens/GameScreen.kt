@@ -183,7 +183,8 @@ fun GameScreen(
             IconButton(onClick = onBackClick) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Zurück"
+                    contentDescription = "Zurück",
+                    tint = Color.Black,
                 )
             }
             Text(
@@ -318,7 +319,9 @@ fun GameScreen(
                             containerColor = Color.DarkGray,
                         )
                     } else {
-                        ButtonDefaults.buttonColors() // Standard-Theme-Farben UI5
+                        ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF1976D2), // Neu: Standard-Theme-Farben UI5 auf Blau
+                        )
                     },
                 ) {
                     Text(i.toString())
@@ -364,7 +367,7 @@ fun GameScreen(
             OutlinedButton(
                 onClick = { isNoteMode = !isNoteMode },
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = if (isNoteMode) Color(0xFF1976D2)else Color.Transparent,
+                    containerColor = if (isNoteMode) Color(0xFF1976D2) else Color.Transparent,
                     contentColor = if (isNoteMode) Color.White else Color.Unspecified
                 ),
                 border = BorderStroke(
