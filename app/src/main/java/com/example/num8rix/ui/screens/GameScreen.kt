@@ -194,12 +194,11 @@ fun GameScreen(
                 textAlign = TextAlign.Center
             )
 
-            // X-Button oben rechts (Kreis mit X)
+            // X-Button oben rechts
             IconButton(
                 onClick = { showExitDialog = true },
                 modifier = Modifier
                     .size(48.dp)
-                    .border(2.dp, Color.Black, CircleShape)
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
@@ -316,7 +315,7 @@ fun GameScreen(
                     contentPadding = PaddingValues(0.dp),
                     colors = if (isNoteMode) {  //dynamische Farbe grau bei aktiven Notizmodus
                         ButtonDefaults.buttonColors(
-                            containerColor = Color.LightGray,
+                            containerColor = Color.DarkGray,
                         )
                     } else {
                         ButtonDefaults.buttonColors() // Standard-Theme-Farben UI5
@@ -365,7 +364,7 @@ fun GameScreen(
             OutlinedButton(
                 onClick = { isNoteMode = !isNoteMode },
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = if (isNoteMode) Color(0xFF1976D2) else Color.Transparent,
+                    containerColor = if (isNoteMode) Color(0xFF1976D2)else Color.Transparent,
                     contentColor = if (isNoteMode) Color.White else Color.Unspecified
                 ),
                 border = BorderStroke(
@@ -378,8 +377,9 @@ fun GameScreen(
             ) {
                 Text(
                     text = "Notizen",
-                    fontSize = 12.sp,
-                    fontWeight = if (isNoteMode) FontWeight.Bold else FontWeight.Normal
+                    fontSize = 14.sp,
+                    fontWeight = if (isNoteMode) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isNoteMode) Color.White else Color.Black,
                 )
             }
             ActionButton("Hinweis") {
@@ -677,8 +677,8 @@ fun SudokuCell(
                                 ) {
                                     Text(
                                         text = if (notes.contains(num)) num.toString() else "",
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Light,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
                                         color = Color.Blue,
                                         textAlign = TextAlign.Center,
                                         lineHeight = 10.sp, // Verhindert Abschneiden
@@ -701,6 +701,11 @@ fun ActionButton(label: String, onClick: () -> Unit) {
         shape = CircleShape,
         modifier = Modifier.height(36.dp)
     ) {
-        Text(label, fontSize = 12.sp)
+        Text(
+            label,
+            fontWeight = FontWeight.Normal,
+            fontSize = 14.sp,
+            color = Color.Black
+        )
     }
 }
