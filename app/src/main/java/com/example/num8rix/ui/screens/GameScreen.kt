@@ -317,10 +317,12 @@ fun GameScreen(
                     colors = if (isNoteMode) {  //dynamische Farbe grau bei aktiven Notizmodus
                         ButtonDefaults.buttonColors(
                             containerColor = Color.DarkGray,
+                            contentColor = Color.White
                         )
                     } else {
                         ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF1976D2), // Neu: Standard-Theme-Farben UI5 auf Blau
+                            contentColor = Color.White
                         )
                     },
                 ) {
