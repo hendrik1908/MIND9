@@ -192,7 +192,8 @@ fun GameScreen(
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = Color.Black
             )
 
             // X-Button oben rechts
